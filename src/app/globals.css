@@ -33,3 +33,95 @@ body {
 a {
   color: inherit;
 }
+
+/* ===================== TEMA ESCURO ===================== */
+/* Remapeia as cores usadas no app quando data-theme="dark" está no <html>.
+   Fica fora de @layer de propósito, pra vencer as utilidades do Tailwind. */
+
+:root[data-theme="dark"] {
+  --bg: #0f1521;
+  --card: #161d2b;
+  --border: #273142;
+  --text: #e6e9ef;
+  --muted: #8b94a3;
+}
+
+[data-theme="dark"] .bg-white {
+  background-color: #161d2b;
+}
+[data-theme="dark"] .bg-gray-50 {
+  background-color: #1b2433;
+}
+[data-theme="dark"] .bg-gray-100 {
+  background-color: #232d3d;
+}
+[data-theme="dark"] .bg-gray-200 {
+  background-color: #2b3647;
+}
+[data-theme="dark"] .bg-gray-300 {
+  background-color: #333f52;
+}
+
+[data-theme="dark"] .text-gray-900 {
+  color: #e6e9ef;
+}
+[data-theme="dark"] .text-gray-800 {
+  color: #d8dce4;
+}
+[data-theme="dark"] .text-gray-700 {
+  color: #c2c8d2;
+}
+[data-theme="dark"] .text-gray-600 {
+  color: #aab2bf;
+}
+[data-theme="dark"] .text-gray-500 {
+  color: #8b94a3;
+}
+[data-theme="dark"] .text-gray-400 {
+  color: #6b7482;
+}
+
+[data-theme="dark"] .border-gray-100 {
+  border-color: #232d3d;
+}
+[data-theme="dark"] .border-gray-200 {
+  border-color: #273142;
+}
+[data-theme="dark"] .border-gray-300 {
+  border-color: #313c4e;
+}
+[data-theme="dark"] .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #232d3d;
+}
+
+[data-theme="dark"] .hover\:bg-gray-50:hover {
+  background-color: #1f2838;
+}
+[data-theme="dark"] .hover\:bg-gray-200:hover {
+  background-color: #2b3647;
+}
+
+/* Inputs que usam estilo inline (.cp/.input/.inp/.campo) e os do Tailwind */
+[data-theme="dark"] .cp,
+[data-theme="dark"] .input,
+[data-theme="dark"] .inp,
+[data-theme="dark"] .campo {
+  background: #161d2b;
+  border-color: #313c4e;
+  color: #e6e9ef;
+}
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  color: #e6e9ef;
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder,
+[data-theme="dark"] .cp::placeholder,
+[data-theme="dark"] .campo::placeholder {
+  color: #6b7482;
+}
+/* Barras de progresso/trilhos cinza claro em fundo escuro */
+[data-theme="dark"] .bg-gray-100.rounded-full {
+  background-color: #273142;
+}

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { logout } from "@/lib/actions/auth";
 import { ROLE_LABEL, type Role } from "@/lib/enums";
+import ThemeToggle from "@/components/ThemeToggle";
 
 type Props = { nome: string; role: string; onNavigate?: () => void };
 
@@ -94,11 +95,14 @@ export default function Sidebar({ nome, role, onNavigate }: Props) {
         <p className="mb-2 text-[11px] text-white/50">
           {ROLE_LABEL[role as Role] ?? role}
         </p>
-        <form action={logout}>
-          <button className="text-xs text-white/60 hover:text-white">
-            Sair
-          </button>
-        </form>
+        <div className="flex items-center justify-between">
+          <form action={logout}>
+            <button className="text-xs text-white/60 hover:text-white">
+              Sair
+            </button>
+          </form>
+          <ThemeToggle className="text-xs text-white/60 hover:text-white" />
+        </div>
       </div>
     </aside>
   );

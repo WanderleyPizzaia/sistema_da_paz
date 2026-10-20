@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { logout } from "@/lib/actions/auth";
+import ThemeToggle from "@/components/ThemeToggle";
 import TabBar from "./TabBar";
 import RegisterSW from "./RegisterSW";
 
@@ -31,11 +32,14 @@ export default async function GerenteLayout({
             <span className="text-lg font-black tracking-wide">PAZ</span>
             <span className="ml-2 text-sm text-white/70">App do Gerente</span>
           </div>
-          <form action={logout}>
-            <button className="text-xs text-white/60 hover:text-white">
-              Sair
-            </button>
-          </form>
+          <div className="flex items-center gap-3">
+            <ThemeToggle className="text-xs text-white/60 hover:text-white" />
+            <form action={logout}>
+              <button className="text-xs text-white/60 hover:text-white">
+                Sair
+              </button>
+            </form>
+          </div>
         </div>
         <p className="mt-1 text-sm font-medium">{posto?.nome ?? "Seu posto"}</p>
       </header>
