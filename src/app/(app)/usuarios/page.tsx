@@ -52,7 +52,56 @@ export default async function UsuariosPage() {
         ))}
       </div>
 
-      <div className="mb-6 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      {/* Mobile: cards */}
+      <ul className="mb-6 space-y-2 lg:hidden">
+        {usuarios.map((x) => (
+          <li
+            key={x.id}
+            className={`rounded-xl border border-gray-200 bg-white p-4 ${
+              x.ativo ? "" : "opacity-70"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <span className="font-medium text-gray-900">
+                {x.nome}
+                {x.id === u.id && (
+                  <span className="ml-1 text-xs text-gray-400">(você)</span>
+                )}
+              </span>
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                  x.ativo
+                    ? "bg-green-100 text-green-700"
+                    : "bg-gray-200 text-gray-600"
+                }`}
+              >
+                {x.ativo ? "Ativo" : "Inativo"}
+              </span>
+            </div>
+            <p className="mt-0.5 text-sm text-gray-600">{x.whatsapp}</p>
+            <p className="mt-1 text-xs text-gray-500">
+              {(ROLE_LABEL[x.role as Role] ?? x.role) +
+                " · " +
+                (x.role === "GERENTE"
+                  ? (x.posto?.nome ?? "—")
+                  : x.funcao
+                    ? (FUNCAO_LABEL[x.funcao] ?? x.funcao)
+                    : "—")}
+            </p>
+            {x.id !== u.id && (
+              <form action={alternarAtivo} className="mt-2">
+                <input type="hidden" name="userId" value={x.id} />
+                <button className="text-xs font-medium text-gray-500 hover:text-[var(--paz-red)]">
+                  {x.ativo ? "Desativar" : "Reativar"}
+                </button>
+              </form>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      {/* Desktop: tabela */}
+      <div className="mb-6 hidden overflow-x-auto rounded-xl border border-gray-200 bg-white lg:block">
         <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">

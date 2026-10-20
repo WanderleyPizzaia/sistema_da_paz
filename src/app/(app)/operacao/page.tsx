@@ -70,7 +70,46 @@ export default async function OperacaoPage() {
       </div>
 
       {/* Por posto */}
-      <div className="mb-6 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      {/* Mobile: cards */}
+      <ul className="mb-6 space-y-2 lg:hidden">
+        {postos.map((p) => {
+          const sp = statusPosto(p.acoes);
+          const feitas = p.acoes.filter((a) => a.status === "FEITA").length;
+          const fotos = p.acoes.filter((a) => a.fotoEnviada).length;
+          const precisaCobrar =
+            sp.label === "Sem retorno" || sp.label === "Atrasado";
+          return (
+            <li
+              key={p.id}
+              className="rounded-xl border border-gray-200 bg-white p-4"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="font-medium text-gray-900">{p.nome}</span>
+                <span
+                  className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                  style={{ backgroundColor: sp.cor }}
+                >
+                  {sp.label}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                {feitas}/{p.acoes.length} ações feitas · {fotos} foto(s)
+              </p>
+              {precisaCobrar && (
+                <form action={cobrarPosto} className="mt-2">
+                  <input type="hidden" name="postoId" value={p.id} />
+                  <button className="text-xs font-medium text-[var(--paz-navy)] hover:underline">
+                    Cobrar no WhatsApp
+                  </button>
+                </form>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Desktop: tabela */}
+      <div className="mb-6 hidden overflow-x-auto rounded-xl border border-gray-200 bg-white lg:block">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">

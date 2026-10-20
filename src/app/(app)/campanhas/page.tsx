@@ -51,7 +51,41 @@ export default async function CampanhasPage() {
           </Link>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <>
+          {/* Mobile: cards */}
+          <ul className="space-y-2 lg:hidden">
+            {campanhas.map((c) => {
+              const si = STATUS_CAMPANHA_INFO[c.status];
+              return (
+                <li key={c.id}>
+                  <Link
+                    href={`/campanhas/${c.id}`}
+                    className="block rounded-xl border border-gray-200 bg-white p-4"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-medium text-gray-900">{c.nome}</span>
+                      <span
+                        className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                        style={{ backgroundColor: si?.cor ?? "#6b7280" }}
+                      >
+                        {si?.label ?? c.status}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-sm text-gray-600">
+                      {TIPO_CAMPANHA_LABEL[c.tipo] ?? c.tipo}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {fmt(c.inicio)} – {fmt(c.fim)} · {c._count.postos} posto(s)
+                      · {c._count.participacoes} participação(ões)
+                    </p>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* Desktop: tabela */}
+          <div className="hidden overflow-x-auto rounded-xl border border-gray-200 bg-white lg:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">
@@ -101,7 +135,8 @@ export default async function CampanhasPage() {
               })}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

@@ -136,59 +136,91 @@ export default async function ClientesPage({
         )}
       </form>
 
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">
-              <th className="px-4 py-3 font-medium">Nome</th>
-              <th className="px-4 py-3 font-medium">WhatsApp</th>
-              <th className="px-4 py-3 font-medium">Posto preferido</th>
-              <th className="px-4 py-3 font-medium">Origem</th>
-              <th className="px-4 py-3 font-medium">Veículo</th>
-              <th className="px-4 py-3 font-medium">Visitas</th>
-              <th className="px-4 py-3 font-medium">Última</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {clientes.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                  Nenhum cliente encontrado.
-                </td>
-              </tr>
-            ) : (
-              clientes.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900">
-                    <Link
-                      href={`/clientes/${c.id}`}
-                      className="hover:text-[var(--paz-navy)] hover:underline"
-                    >
-                      {c.nome}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{c.whatsapp}</td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {c.postoPreferido?.nome ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">{c.origem ?? "—"}</td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {c.tipoVeiculo ? (VEICULO_LABEL[c.tipoVeiculo] ?? "—") : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{c._count.eventos}</td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {c.eventos[0]
-                      ? new Date(c.eventos[0].criadoEm).toLocaleDateString(
-                          "pt-BR",
-                        )
-                      : "—"}
-                  </td>
+      {clientes.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
+          Nenhum cliente encontrado.
+        </div>
+      ) : (
+        <>
+          {/* Mobile: cards */}
+          <ul className="space-y-2 lg:hidden">
+            {clientes.map((c) => (
+              <li key={c.id}>
+                <Link
+                  href={`/clientes/${c.id}`}
+                  className="block rounded-xl border border-gray-200 bg-white p-4"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-medium text-gray-900">{c.nome}</span>
+                    <span className="shrink-0 text-xs text-gray-500">
+                      {c._count.eventos} visita(s)
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-sm text-gray-600">{c.whatsapp}</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {[
+                      c.postoPreferido?.nome,
+                      c.tipoVeiculo ? VEICULO_LABEL[c.tipoVeiculo] : null,
+                      c.origem,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "—"}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          {/* Desktop: tabela */}
+          <div className="hidden overflow-x-auto rounded-xl border border-gray-200 bg-white lg:block">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3 font-medium">Nome</th>
+                  <th className="px-4 py-3 font-medium">WhatsApp</th>
+                  <th className="px-4 py-3 font-medium">Posto preferido</th>
+                  <th className="px-4 py-3 font-medium">Origem</th>
+                  <th className="px-4 py-3 font-medium">Veículo</th>
+                  <th className="px-4 py-3 font-medium">Visitas</th>
+                  <th className="px-4 py-3 font-medium">Última</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {clientes.map((c) => (
+                  <tr key={c.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium text-gray-900">
+                      <Link
+                        href={`/clientes/${c.id}`}
+                        className="hover:text-[var(--paz-navy)] hover:underline"
+                      >
+                        {c.nome}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{c.whatsapp}</td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {c.postoPreferido?.nome ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">{c.origem ?? "—"}</td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {c.tipoVeiculo ? (VEICULO_LABEL[c.tipoVeiculo] ?? "—") : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {c._count.eventos}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">
+                      {c.eventos[0]
+                        ? new Date(c.eventos[0].criadoEm).toLocaleDateString(
+                            "pt-BR",
+                          )
+                        : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 }
