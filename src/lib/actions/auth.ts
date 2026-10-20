@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { criarSessao, encerrarSessao } from "@/lib/session";
 import { registrar } from "@/lib/audit";
+import { enviarWhatsapp } from "@/lib/whatsapp-sender";
 
 // Normaliza WhatsApp para somente digitos.
 function soDigitos(v: string): string {
@@ -47,8 +48,13 @@ export async function solicitarCodigo(
   await prisma.loginCode.create({ data: { whatsapp, codigo, expiraEm } });
   await registrar({ userId: user.id, acao: "login.codigo.solicitado" });
 
-  // Em producao, aqui entraria o envio via WhatsApp Business API.
   console.log(`\n[LOGIN] Código para ${whatsapp}: ${codigo}\n`);
+
+  // Envia o código pelo WhatsApp (Evolution API), se configurado.
+  await enviarWhatsapp(
+    whatsapp,
+    `Rede Paz: seu código de acesso é ${codigo}. Não compartilhe com ninguém.`,
+  );
 
   return {
     step: "codigo",
