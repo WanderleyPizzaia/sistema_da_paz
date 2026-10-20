@@ -27,7 +27,7 @@ export default async function Paz365Page() {
     prisma.mixCategoria.findMany({ orderBy: { ordem: "asc" } }),
   ]);
 
-  const lojas = postos.filter((p) => p.bandeira === "PAZ365");
+  const lojas = postos.filter((p) => p.temPaz365);
   const emOperacao = lojas.filter((p) => p.etapa === "OPERACAO");
   const vendasSemana = lojas.reduce(
     (s, p) => s + (p.metricas[0]?.vendas ?? 0),

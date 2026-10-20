@@ -31,25 +31,29 @@ async function main() {
   const exemplos = [
     {
       nome: "Posto Mykonos",
-      bandeira: "PAZ365",
+      bandeira: "IPIRANGA",
+      temPaz365: true,
       etapa: "OPERACAO",
       endereco: "Av. Exemplo, 100 — São Paulo",
     },
     {
       nome: "Posto Paz — Vila São Francisco",
-      bandeira: "PAZ",
+      bandeira: "BR",
+      temPaz365: false,
       etapa: "OPERACAO",
       endereco: "Av. Eng. Marsilac Sampaio, 600 — São Paulo",
     },
     {
       nome: "Posto Novo Horizonte",
-      bandeira: "PAZ365",
+      bandeira: "IPIRANGA",
+      temPaz365: true,
       etapa: "OBRA",
       endereco: "Rua das Flores, 20 — São Paulo",
     },
     {
       nome: "Posto Ipiranga",
-      bandeira: "PAZ",
+      bandeira: "IPIRANGA",
+      temPaz365: false,
       etapa: "OPERACAO",
       endereco: "Av. Nazaré — Ipiranga, São Paulo",
     },

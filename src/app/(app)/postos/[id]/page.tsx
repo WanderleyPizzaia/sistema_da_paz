@@ -6,6 +6,7 @@ import { podeOperarMarketing, podeVerPosto } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { criarQR, alternarQR } from "@/lib/actions/qrcodes";
 import {
+  BANDEIRA_LABEL,
   ETAPA_LABEL,
   FAROIS,
   FAROL_INFO,
@@ -81,7 +82,9 @@ export default async function PostoPage({
           <FarolBadge farol={farolAtual} />
         </div>
         <p className="text-sm text-gray-500">
-          {posto.bandeira} · {ETAPA_LABEL[posto.etapa] ?? posto.etapa}
+          {BANDEIRA_LABEL[posto.bandeira] ?? posto.bandeira}
+          {posto.temPaz365 ? " · PAZ365" : ""} ·{" "}
+          {ETAPA_LABEL[posto.etapa] ?? posto.etapa}
           {posto.endereco ? ` · ${posto.endereco}` : ""}
         </p>
       </div>

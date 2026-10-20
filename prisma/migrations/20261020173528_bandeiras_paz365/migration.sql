@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Posto" ADD COLUMN     "temPaz365" BOOLEAN NOT NULL DEFAULT false,
+ALTER COLUMN "bandeira" SET DEFAULT 'IPIRANGA';

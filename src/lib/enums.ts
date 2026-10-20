@@ -27,8 +27,14 @@ export const FUNCAO_LABEL: Record<string, string> = {
   COORDENACAO: "Coordenação",
 };
 
-export const BANDEIRAS = ["BR", "PAZ", "PAZ365"] as const;
+export const BANDEIRAS = ["IPIRANGA", "BR", "BANDEIRA_BRANCA"] as const;
 export type Bandeira = (typeof BANDEIRAS)[number];
+
+export const BANDEIRA_LABEL: Record<string, string> = {
+  IPIRANGA: "Ipiranga",
+  BR: "BR",
+  BANDEIRA_BRANCA: "Bandeira branca",
+};
 
 export const ETAPAS = ["IDEIA", "ESTUDO", "OBRA", "OPERACAO"] as const;
 export type Etapa = (typeof ETAPAS)[number];

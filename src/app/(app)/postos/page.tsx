@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/session";
 import { isAdm, isGerente } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import {
-  BANDEIRAS,
+  BANDEIRA_LABEL,
   ETAPA_LABEL,
   FAROIS,
   mesRefAtual,
@@ -103,9 +103,16 @@ export default async function PostosPage() {
             >
               <div className="mb-2 flex items-start justify-between gap-2">
                 <div>
-                  <h3 className="font-semibold text-gray-900">{p.nome}</h3>
+                  <h3 className="flex flex-wrap items-center gap-1.5 font-semibold text-gray-900">
+                    {p.nome}
+                    {p.temPaz365 && (
+                      <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-[var(--paz-red)]">
+                        PAZ365
+                      </span>
+                    )}
+                  </h3>
                   <p className="text-xs text-gray-500">
-                    {rotuloBandeira(p.bandeira)} ·{" "}
+                    {BANDEIRA_LABEL[p.bandeira] ?? p.bandeira} ·{" "}
                     {ETAPA_LABEL[p.etapa] ?? p.etapa}
                   </p>
                 </div>
@@ -125,10 +132,6 @@ export default async function PostosPage() {
       )}
     </div>
   );
-}
-
-function rotuloBandeira(b: string): string {
-  return (BANDEIRAS as readonly string[]).includes(b) ? b : b;
 }
 
 function Stat({

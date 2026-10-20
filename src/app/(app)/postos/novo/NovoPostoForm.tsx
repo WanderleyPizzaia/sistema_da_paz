@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { criarPosto, type PostoState } from "@/lib/actions/postos";
-import { BANDEIRAS, ETAPAS, ETAPA_LABEL } from "@/lib/enums";
+import { BANDEIRAS, BANDEIRA_LABEL, ETAPAS, ETAPA_LABEL } from "@/lib/enums";
 
 const inicial: PostoState = {};
 
@@ -23,10 +23,10 @@ export default function NovoPostoForm() {
 
       <div className="grid grid-cols-2 gap-4">
         <Campo label="Bandeira">
-          <select name="bandeira" defaultValue="PAZ" className="input">
+          <select name="bandeira" defaultValue="IPIRANGA" className="input">
             {BANDEIRAS.map((b) => (
               <option key={b} value={b}>
-                {b}
+                {BANDEIRA_LABEL[b]}
               </option>
             ))}
           </select>
@@ -49,6 +49,10 @@ export default function NovoPostoForm() {
           className="input"
         />
       </Campo>
+
+      <label className="flex items-center gap-2 text-sm text-gray-700">
+        <input type="checkbox" name="temPaz365" /> Tem loja PAZ365 (mini mercado)
+      </label>
 
       {state.erro && <p className="text-sm text-[var(--paz-red)]">{state.erro}</p>}
 

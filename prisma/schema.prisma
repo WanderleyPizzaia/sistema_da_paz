@@ -35,7 +35,8 @@ model User {
 model Posto {
   id        String   @id @default(cuid())
   nome      String
-  bandeira  String   @default("PAZ") // BR | PAZ | PAZ365
+  bandeira  String   @default("IPIRANGA") // IPIRANGA | BR | BANDEIRA_BRANCA
+  temPaz365 Boolean  @default(false) // tem loja PAZ365 (mini mercado)?
   endereco  String?
   etapa     String   @default("OPERACAO") // IDEIA | ESTUDO | OBRA | OPERACAO
   lat       Float?

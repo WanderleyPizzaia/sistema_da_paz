@@ -27,9 +27,10 @@ export async function criarPosto(
   exigir(podeEditarRegistroPosto(u));
 
   const nome = String(formData.get("nome") ?? "").trim();
-  const bandeira = String(formData.get("bandeira") ?? "PAZ");
+  const bandeira = String(formData.get("bandeira") ?? "IPIRANGA");
   const etapa = String(formData.get("etapa") ?? "OPERACAO");
   const endereco = String(formData.get("endereco") ?? "").trim() || null;
+  const temPaz365 = formData.get("temPaz365") === "on";
 
   if (nome.length < 2) return { erro: "Informe o nome do posto." };
   if (!(BANDEIRAS as readonly string[]).includes(bandeira))
@@ -38,7 +39,7 @@ export async function criarPosto(
     return { erro: "Etapa inválida." };
 
   const posto = await prisma.posto.create({
-    data: { nome, bandeira, etapa, endereco },
+    data: { nome, bandeira, etapa, endereco, temPaz365 },
   });
   await registrar({
     userId: u.id,
