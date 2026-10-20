@@ -1,0 +1,18 @@
+{
+  "name": "App do Gerente — Rede Paz",
+  "short_name": "Gerente Paz",
+  "description": "Pedidos ao marketing e ações locais do seu posto.",
+  "start_url": "/gerente",
+  "scope": "/gerente",
+  "display": "standalone",
+  "background_color": "#17236b",
+  "theme_color": "#17236b",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

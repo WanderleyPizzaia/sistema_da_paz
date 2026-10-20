@@ -1,0 +1,367 @@
+// Schema do CRM Rede Paz / PAZ365.
+// Banco: PostgreSQL (local via docker compose; produção no EasyPanel).
+//
+// Observacao: mantemos os campos de "enum" como String com validacao na
+// aplicacao (ver src/lib/enums.ts), para o modelo ficar simples e portatil.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Usuario do sistema: ADM, Marketing ou Gerente.
+model User {
+  id         String   @id @default(cuid())
+  nome       String
+  whatsapp   String   @unique
+  email      String?
+  role       String   @default("MARKETING") // ADM | MARKETING | GERENTE
+  funcao     String? // p/ Marketing: DESIGNER | VIDEOS | SOCIAL | TRAFEGO | COORDENACAO
+  postoId    String? // p/ Gerente: posto a que esta vinculado
+  posto      Posto?   @relation("GerentesDoPosto", fields: [postoId], references: [id])
+  ativo      Boolean  @default(true)
+  ultimoAcesso DateTime?
+  criadoEm   DateTime @default(now())
+
+  sessions   Session[]
+  logs       AuditLog[]
+}
+
+// Posto da rede.
+model Posto {
+  id        String   @id @default(cuid())
+  nome      String
+  bandeira  String   @default("PAZ") // BR | PAZ | PAZ365
+  endereco  String?
+  etapa     String   @default("OPERACAO") // IDEIA | ESTUDO | OBRA | OPERACAO
+  lat       Float?
+  lng       Float?
+  criadoEm  DateTime @default(now())
+
+  gerentes  User[]          @relation("GerentesDoPosto")
+  status    PostoStatus[]
+  acoes     AcaoMarketing[]
+  clientes  Cliente[]       @relation("ClientesDoPosto")
+  qrcodes   QRCode[]
+  eventos   EventoCliente[] @relation("EventosDoPosto")
+  campanhas Campanha[]      @relation("CampanhaPostos")
+  pedidosArte PedidoArte[]
+  videos    Video[]
+  pontosEStop PontoEStop[]
+  parcerias Parceria[]
+  metricas  MetricaPosto[]
+}
+
+// Métricas mensais do posto (simulam PDV + Google Business Profile).
+model MetricaPosto {
+  id            String   @id @default(cuid())
+  postoId       String
+  posto         Posto    @relation(fields: [postoId], references: [id], onDelete: Cascade)
+  mes           String   // "YYYY-MM"
+  vendas        Float    @default(0)
+  ticketMedio   Float    @default(0)
+  notaGoogle    Float?
+  avaliacoes    Int      @default(0)
+  pedidosRota   Int      @default(0)
+  visualizacoes Int      @default(0)
+  criadoEm      DateTime @default(now())
+
+  @@unique([postoId, mes])
+}
+
+// Mix de vendas por categoria (rede). Usado na tela PAZ365.
+model MixCategoria {
+  id           String   @id @default(cuid())
+  categoria    String
+  participacao Float    @default(0) // em %
+  ehNovo       Boolean  @default(false) // categoria em teste
+  ordem        Int      @default(0)
+  criadoEm     DateTime @default(now())
+}
+
+// Cliente final da rede. WhatsApp e a chave unica.
+model Cliente {
+  id               String   @id @default(cuid())
+  nome             String
+  whatsapp         String   @unique
+  email            String?
+  tipoVeiculo      String? // CARRO | MOTO | ELETRICO | OUTRO
+  postoPreferidoId String?
+  postoPreferido   Posto?   @relation("ClientesDoPosto", fields: [postoPreferidoId], references: [id], onDelete: SetNull)
+  origem           String? // ex.: "QR:Posto Mykonos" | "MANUAL"
+  tags             String? // lista simples separada por virgula
+  criadoEm         DateTime @default(now())
+  atualizadoEm     DateTime @updatedAt
+
+  consentimentos Consentimento[]
+  eventos        EventoCliente[]
+  participacoes  Participacao[]
+}
+
+// QR Code de captacao (fica na bomba). Aponta para um posto.
+model QRCode {
+  id           String   @id @default(cuid())
+  token        String   @unique // usado na URL /qr/<token>
+  postoId      String
+  posto        Posto    @relation(fields: [postoId], references: [id], onDelete: Cascade)
+  bomba        String? // ex.: "Bomba 3"
+  campanhaNome String? // texto livre (quando nao ha campanha vinculada)
+  campanhaId   String?
+  campanha     Campanha? @relation(fields: [campanhaId], references: [id], onDelete: SetNull)
+  premio       String? // ex.: "vale-combustível"
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now())
+
+  eventos EventoCliente[]
+}
+
+// Campanha / promocao (sorteio, cupom, oferta).
+model Campanha {
+  id                     String   @id @default(cuid())
+  nome                   String
+  tipo                   String // SORTEIO | CUPOM | OFERTA
+  premio                 String?
+  inicio                 DateTime?
+  fim                    DateTime?
+  regulamentoUrl         String?
+  status                 String   @default("RASCUNHO") // RASCUNHO | ATIVA | ENCERRADA
+  ganhadorParticipacaoId String?
+  criadoEm               DateTime @default(now())
+
+  postos        Posto[]        @relation("CampanhaPostos")
+  qrcodes       QRCode[]
+  participacoes Participacao[]
+  disparos      Disparo[]
+}
+
+// Participacao de um cliente numa campanha (numero da sorte no sorteio).
+model Participacao {
+  id         String   @id @default(cuid())
+  clienteId  String
+  cliente    Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  campanhaId String
+  campanha   Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  numeroSorte String
+  canal      String? // QR | MANUAL
+  criadoEm   DateTime @default(now())
+
+  @@unique([clienteId, campanhaId])
+  @@index([campanhaId])
+}
+
+// Modelo de mensagem do WhatsApp (precisa aprovacao da Meta para disparar).
+model ModeloMensagem {
+  id        String   @id @default(cuid())
+  nome      String
+  categoria String? // MARKETING | UTILIDADE
+  corpo     String
+  statusMeta String  @default("PENDENTE") // PENDENTE | APROVADO | REPROVADO
+  criadoEm  DateTime @default(now())
+
+  automacoes Automacao[]
+  disparos   Disparo[]
+}
+
+// Automacao: dispara um modelo quando um gatilho acontece.
+model Automacao {
+  id        String   @id @default(cuid())
+  nome      String
+  gatilho   String // CADASTRO_QR | MANUAL
+  modeloId  String?
+  modelo    ModeloMensagem? @relation(fields: [modeloId], references: [id], onDelete: SetNull)
+  ativo     Boolean  @default(true)
+  descricao String?
+  criadoEm  DateTime @default(now())
+}
+
+// Registro de um disparo em massa (simulado no local).
+model Disparo {
+  id                String   @id @default(cuid())
+  modeloId          String?
+  modelo            ModeloMensagem? @relation(fields: [modeloId], references: [id], onDelete: SetNull)
+  campanhaId        String?
+  campanha          Campanha? @relation(fields: [campanhaId], references: [id], onDelete: SetNull)
+  segmentoDescricao String?
+  total             Int      @default(0)
+  status            String   @default("ENVIADO")
+  userId            String?
+  criadoEm          DateTime @default(now())
+}
+
+// Consentimento LGPD por finalidade.
+model Consentimento {
+  id            String   @id @default(cuid())
+  clienteId     String
+  cliente       Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  finalidade    String // MARKETING_WHATSAPP | REGULAMENTO
+  aceito        Boolean
+  politicaVersao String
+  ip            String?
+  criadoEm      DateTime @default(now())
+}
+
+// Evento na linha do tempo do cliente (scan, cadastro, edicao...).
+model EventoCliente {
+  id        String   @id @default(cuid())
+  clienteId String
+  cliente   Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  tipo      String // SCAN | CADASTRO | EDICAO | MENSAGEM
+  detalhe   String?
+  postoId   String?
+  posto     Posto?   @relation("EventosDoPosto", fields: [postoId], references: [id], onDelete: SetNull)
+  qrCodeId  String?
+  qrCode    QRCode?  @relation(fields: [qrCodeId], references: [id], onDelete: SetNull)
+  criadoEm  DateTime @default(now())
+
+  @@index([clienteId])
+}
+
+// Farol de status do posto, um registro por mes (ex.: "2026-10").
+model PostoStatus {
+  id         String   @id @default(cuid())
+  postoId    String
+  posto      Posto    @relation(fields: [postoId], references: [id], onDelete: Cascade)
+  mesRef     String   // "YYYY-MM"
+  farol      String   @default("AMARELO") // VERDE | AMARELO | VERMELHO
+  observacao String?
+  criadoEm   DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@unique([postoId, mesRef])
+}
+
+// Acao de marketing de um posto.
+model AcaoMarketing {
+  id          String   @id @default(cuid())
+  postoId     String
+  posto       Posto    @relation(fields: [postoId], references: [id], onDelete: Cascade)
+  titulo      String
+  tipo        String? // ex.: ARTE | VIDEO | OFERTA | EVENTO
+  data        DateTime?
+  responsavel String?
+  status      String   @default("PLANEJADA") // PLANEJADA | FEITA
+  fotoEnviada Boolean  @default(false)
+  feitaEm     DateTime?
+  fotoAprovada Boolean @default(false)
+  criadoEm    DateTime @default(now())
+}
+
+// Codigo de login enviado por WhatsApp (em local, exibido na tela).
+model LoginCode {
+  id        String   @id @default(cuid())
+  whatsapp  String
+  codigo    String
+  expiraEm  DateTime
+  usadoEm   DateTime?
+  criadoEm  DateTime @default(now())
+
+  @@index([whatsapp])
+}
+
+// Sessao autenticada (token no cookie httpOnly).
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiraEm  DateTime
+  criadoEm  DateTime @default(now())
+}
+
+// Log de auditoria: quem fez o que.
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  acao      String   // ex.: "posto.criar", "farol.definir", "usuario.desativar"
+  entidade  String?
+  entidadeId String?
+  detalhe   String?
+  criadoEm  DateTime @default(now())
+}
+
+// ---------- Fase 4: Produção ----------
+
+// Pedido de arte (Designer). Prazo = criado + 24h.
+model PedidoArte {
+  id          String   @id @default(cuid())
+  numero      Int
+  postoId     String?
+  posto       Posto?   @relation(fields: [postoId], references: [id], onDelete: SetNull)
+  acao        String // ação de marketing (texto)
+  formato     String?
+  descricao   String?
+  textoArte   String?
+  referencias String?
+  responsavel String?
+  status      String   @default("ABERTO") // ABERTO | PARA_APROVAR | ENTREGUE
+  prazo       DateTime
+  entregueEm  DateTime?
+  pastaUrl    String?
+  ehEStop     Boolean  @default(false)
+  criadoEm    DateTime @default(now())
+}
+
+// Vídeo (quadro de produção kanban).
+model Video {
+  id       String   @id @default(cuid())
+  titulo   String
+  origem   String   @default("IDEIA") // IDEIA | PEDIDO
+  etapa    String   @default("IDEIA") // IDEIA | ROTEIRO | APROVAR | GRAVACAO | EDICAO | PUBLICADO
+  postoId  String?
+  posto    Posto?   @relation(fields: [postoId], references: [id], onDelete: SetNull)
+  roteiro  String?
+  elenco   String?
+  votos    Int      @default(0)
+  pastaUrl String?
+  criadoEm DateTime @default(now())
+}
+
+// Ponto de recarga elétrica (E-Stop).
+model PontoEStop {
+  id              String   @id @default(cuid())
+  postoId         String
+  posto           Posto    @relation(fields: [postoId], references: [id], onDelete: Cascade)
+  numCarregadores Int      @default(1)
+  potenciaKw      Float?
+  conector        String?
+  horario         String?
+  status          String   @default("DISPONIVEL") // DISPONIVEL | EM_USO | MANUTENCAO
+  fotoUrl         String?
+  criadoEm        DateTime @default(now())
+}
+
+// Influenciador.
+model Influenciador {
+  id          String   @id @default(cuid())
+  nome        String
+  arroba      String?
+  nicho       String?
+  seguidores  Int      @default(0)
+  whatsapp    String?
+  regiao      String?
+  quemIndicou String?
+  fotoUrl     String?
+  criadoEm    DateTime @default(now())
+
+  parcerias Parceria[]
+}
+
+// Parceria com um influenciador.
+model Parceria {
+  id              String   @id @default(cuid())
+  influenciadorId String
+  influenciador   Influenciador @relation(fields: [influenciadorId], references: [id], onDelete: Cascade)
+  tipo            String   @default("PERMUTA") // PERMUTA | PAGO
+  entregaveis     String?
+  postoAtivacaoId String?
+  posto           Posto?   @relation(fields: [postoAtivacaoId], references: [id], onDelete: SetNull)
+  contratoUrl     String?
+  status          String   @default("PROSPECCAO") // PROSPECCAO | NEGOCIANDO | CONFIRMADO | EM_GRAVACAO | PUBLICADO | ENCERRADO
+  cupom           String?
+  criadoEm        DateTime @default(now())
+}
