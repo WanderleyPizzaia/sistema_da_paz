@@ -14,9 +14,6 @@ export default async function LoginPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-paz.png" alt="PAZ" className="h-9 w-auto" />
           </div>
-          <p className="mt-3 text-sm text-white/70">
-            CRM Rede Paz · PAZ365
-          </p>
         </div>
         <div className="rounded-2xl bg-white p-6 shadow-xl">
           <h1 className="mb-1 text-lg font-bold text-gray-900">Entrar</h1>
