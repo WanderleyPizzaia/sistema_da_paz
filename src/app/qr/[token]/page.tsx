@@ -31,9 +31,12 @@ export default async function LandingPage({
     <main className="flex min-h-screen items-center justify-center bg-[var(--paz-navy)] p-4">
       <div className="w-full max-w-sm">
         <div className="mb-4 text-center">
-          <span className="text-2xl font-black tracking-wide text-white">
-            PAZ
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo-paz.png"
+            alt="PAZ"
+            className="mx-auto h-8 w-auto"
+          />
         </div>
         <div className="overflow-hidden rounded-2xl bg-white shadow-xl">
           <div className="bg-[var(--paz-red)] px-6 py-5 text-white">

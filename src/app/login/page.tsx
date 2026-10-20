@@ -10,10 +10,9 @@ export default async function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-[var(--paz-navy)] p-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <div className="inline-block rounded-xl bg-white/10 px-5 py-3">
-            <span className="text-2xl font-black tracking-wide text-white">
-              PAZ
-            </span>
+          <div className="inline-block rounded-xl bg-white/10 px-6 py-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-paz.png" alt="PAZ" className="h-9 w-auto" />
           </div>
           <p className="mt-3 text-sm text-white/70">
             CRM Rede Paz · PAZ365

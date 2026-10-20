@@ -28,9 +28,10 @@ export default async function GerenteLayout({
       <RegisterSW />
       <header className="bg-[var(--paz-navy)] px-4 py-3 text-white">
         <div className="flex items-center justify-between">
-          <div>
-            <span className="text-lg font-black tracking-wide">PAZ</span>
-            <span className="ml-2 text-sm text-white/70">App do Gerente</span>
+          <div className="flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-paz.png" alt="PAZ" className="h-5 w-auto" />
+            <span className="text-sm text-white/70">App do Gerente</span>
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle className="text-xs text-white/60 hover:text-white" />

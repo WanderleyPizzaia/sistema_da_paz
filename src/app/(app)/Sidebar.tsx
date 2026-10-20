@@ -52,8 +52,9 @@ export default function Sidebar({ nome, role, onNavigate }: Props) {
   return (
     <aside className="flex h-full min-h-screen w-60 shrink-0 flex-col bg-[var(--paz-navy)] text-white">
       <div className="px-5 py-5">
-        <span className="text-xl font-black tracking-wide">PAZ</span>
-        <p className="mt-0.5 text-[11px] text-white/50">CRM · Rede Paz</p>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-paz.png" alt="PAZ" className="h-6 w-auto" />
+        <p className="mt-1.5 text-[11px] text-white/50">CRM · Rede Paz</p>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3">
