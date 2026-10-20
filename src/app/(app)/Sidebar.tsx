@@ -5,7 +5,7 @@ import Link from "next/link";
 import { logout } from "@/lib/actions/auth";
 import { ROLE_LABEL, type Role } from "@/lib/enums";
 
-type Props = { nome: string; role: string };
+type Props = { nome: string; role: string; onNavigate?: () => void };
 
 type Item = { href: string; label: string; roles?: Role[] };
 type Secao = { titulo: string; itens: Item[] };
@@ -45,11 +45,11 @@ const SECOES: Secao[] = [
   },
 ];
 
-export default function Sidebar({ nome, role }: Props) {
+export default function Sidebar({ nome, role, onNavigate }: Props) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col bg-[var(--paz-navy)] text-white">
+    <aside className="flex h-full min-h-screen w-60 shrink-0 flex-col bg-[var(--paz-navy)] text-white">
       <div className="px-5 py-5">
         <span className="text-xl font-black tracking-wide">PAZ</span>
         <p className="mt-0.5 text-[11px] text-white/50">CRM · Rede Paz</p>
@@ -73,6 +73,7 @@ export default function Sidebar({ nome, role }: Props) {
                   <Link
                     key={i.href}
                     href={i.href}
+                    onClick={onNavigate}
                     className={`mb-0.5 block rounded-md px-2.5 py-2 text-sm transition ${
                       ativo
                         ? "bg-[var(--paz-red)] font-semibold text-white"

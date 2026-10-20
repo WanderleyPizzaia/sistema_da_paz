@@ -52,8 +52,8 @@ export default async function UsuariosPage() {
         ))}
       </div>
 
-      <div className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white">
-        <table className="w-full text-sm">
+      <div className="mb-6 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">
               <th className="px-4 py-3 font-medium">Nome</th>

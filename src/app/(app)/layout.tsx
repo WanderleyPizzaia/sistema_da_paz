@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
-import Sidebar from "./Sidebar";
+import AppShell from "./AppShell";
 
 export default async function AppLayout({
   children,
@@ -12,9 +12,8 @@ export default async function AppLayout({
   if (u.role === "GERENTE") redirect("/gerente");
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar nome={u.nome} role={u.role} />
-      <main className="flex-1 overflow-x-hidden">{children}</main>
-    </div>
+    <AppShell nome={u.nome} role={u.role}>
+      {children}
+    </AppShell>
   );
 }
