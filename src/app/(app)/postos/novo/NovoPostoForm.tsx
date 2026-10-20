@@ -50,10 +50,6 @@ export default function NovoPostoForm() {
         />
       </Campo>
 
-      <label className="flex items-center gap-2 text-sm text-gray-700">
-        <input type="checkbox" name="temPaz365" /> Tem loja PAZ365 (mini mercado)
-      </label>
-
       {state.erro && <p className="text-sm text-[var(--paz-red)]">{state.erro}</p>}
 
       <div className="flex gap-3 pt-2">
