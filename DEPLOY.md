@@ -6,7 +6,7 @@ PostgreSQL, `Dockerfile` e migrações automáticas.
 ## Resumo da infraestrutura
 
 - **VPS:** droplet DigitalOcean com EasyPanel (ex.: 2 GB RAM).
-- **App:** este repositório (`EuGabis/sistema_da_paz`), imagem Docker.
+- **App:** este repositório (`WanderleyPizzaia/sistema_da_paz`), imagem Docker.
 - **Banco:** PostgreSQL criado como serviço no EasyPanel.
 
 ## 1. Banco de dados (EasyPanel)
@@ -17,7 +17,7 @@ PostgreSQL, `Dockerfile` e migrações automáticas.
 
 ## 2. App (EasyPanel)
 
-1. **＋ Service → App**, origem **GitHub** → `EuGabis/sistema_da_paz`, branch `main`.
+1. **＋ Service → App**, origem **GitHub** → `WanderleyPizzaia/sistema_da_paz`, branch `main`.
 2. Como o repositório é **privado**, conecte a conta do GitHub no EasyPanel ou
    gere um **token** / **deploy key** e cole nas credenciais do serviço.
 3. **Build:** `Dockerfile` (já incluído na raiz do projeto).
