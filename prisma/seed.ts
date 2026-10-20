@@ -283,6 +283,23 @@ async function main() {
     });
   }
 
+  // Um pedido E-Stop de exemplo (arte marcada como E-Stop).
+  if ((await prisma.pedidoArte.count({ where: { ehEStop: true } })) === 0) {
+    const n = await prisma.pedidoArte.count();
+    await prisma.pedidoArte.create({
+      data: {
+        numero: n + 1,
+        postoId: posto1?.id,
+        acao: "Story: tem E-Stop no Posto Mykonos",
+        formato: "Story 1080x1920",
+        responsavel: "Marina",
+        ehEStop: true,
+        status: "ABERTO",
+        prazo: new Date(Date.now() + 4 * 3600 * 1000),
+      },
+    });
+  }
+
   if ((await prisma.video.count()) === 0) {
     await prisma.video.createMany({
       data: [

@@ -57,7 +57,7 @@ export default function NovoPontoForm({ postos }: { postos: PostoOpt[] }) {
       {state.ok && <p className="text-sm text-green-600">Ponto de recarga criado.</p>}
       <button
         disabled={pending}
-        className="rounded-lg bg-[var(--paz-red)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--paz-red-600)] disabled:opacity-60"
+        className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
       >
         {pending ? "Salvando…" : "+ Novo ponto E-Stop"}
       </button>
