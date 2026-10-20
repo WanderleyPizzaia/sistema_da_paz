@@ -47,6 +47,12 @@ async function main() {
       etapa: "OBRA",
       endereco: "Rua das Flores, 20 — São Paulo",
     },
+    {
+      nome: "Posto Ipiranga",
+      bandeira: "PAZ",
+      etapa: "OPERACAO",
+      endereco: "Av. Nazaré — Ipiranga, São Paulo",
+    },
   ];
 
   for (const e of exemplos) {
