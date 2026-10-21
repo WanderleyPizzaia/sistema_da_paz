@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { requireUser } from "@/lib/session";
-import { podeOperarMarketing, podeVerPosto } from "@/lib/authz";
+import { isAdm, podeOperarMarketing, podeVerPosto } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { criarQR, alternarQR } from "@/lib/actions/qrcodes";
 import {
@@ -80,6 +80,14 @@ export default async function PostoPage({
         <div className="mt-1 flex flex-wrap items-center gap-3">
           <h1 className="text-xl font-bold text-gray-900">{posto.nome}</h1>
           <FarolBadge farol={farolAtual} />
+          {isAdm(u) && (
+            <Link
+              href={`/postos/${posto.id}/editar`}
+              className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Editar
+            </Link>
+          )}
         </div>
         <p className="text-sm text-gray-500">
           {BANDEIRA_LABEL[posto.bandeira] ?? posto.bandeira}

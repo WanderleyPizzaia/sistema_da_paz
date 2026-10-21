@@ -51,6 +51,41 @@ export async function criarPosto(
   redirect(`/postos/${posto.id}`);
 }
 
+// Editar o cadastro de um posto (so ADM).
+export async function editarPosto(
+  _prev: PostoState,
+  formData: FormData,
+): Promise<PostoState> {
+  const u = await requireUser();
+  exigir(podeEditarRegistroPosto(u));
+
+  const id = String(formData.get("id") ?? "");
+  const nome = String(formData.get("nome") ?? "").trim();
+  const bandeira = String(formData.get("bandeira") ?? "IPIRANGA");
+  const etapa = String(formData.get("etapa") ?? "OPERACAO");
+  const endereco = String(formData.get("endereco") ?? "").trim() || null;
+
+  if (nome.length < 2) return { erro: "Informe o nome do posto." };
+  if (!(BANDEIRAS as readonly string[]).includes(bandeira))
+    return { erro: "Bandeira inválida." };
+  if (!(ETAPAS as readonly string[]).includes(etapa))
+    return { erro: "Etapa inválida." };
+
+  await prisma.posto.update({
+    where: { id },
+    data: { nome, bandeira, etapa, endereco },
+  });
+  await registrar({
+    userId: u.id,
+    acao: "posto.editar",
+    entidade: "Posto",
+    entidadeId: id,
+    detalhe: nome,
+  });
+
+  redirect(`/postos/${id}`);
+}
+
 // Definir o farol do mes atual (ADM e Marketing).
 export async function definirFarol(formData: FormData): Promise<void> {
   const u = await requireUser();
