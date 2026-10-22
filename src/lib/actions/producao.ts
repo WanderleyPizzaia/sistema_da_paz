@@ -68,6 +68,26 @@ export async function criarPedidoArte(
   return { ok: true };
 }
 
+// Salva (ou limpa) o link da pasta do pedido no Google Drive.
+export async function definirPastaPedido(formData: FormData): Promise<void> {
+  const u = await exigirMkt();
+  const id = String(formData.get("id") ?? "");
+  let pastaUrl = String(formData.get("pastaUrl") ?? "").trim() || null;
+  if (pastaUrl && !/^https?:\/\//i.test(pastaUrl)) {
+    pastaUrl = `https://${pastaUrl}`;
+  }
+
+  await prisma.pedidoArte.update({ where: { id }, data: { pastaUrl } });
+  await registrar({
+    userId: u.id,
+    acao: "pedido.pasta",
+    entidade: "PedidoArte",
+    entidadeId: id,
+    detalhe: pastaUrl ?? "pasta removida",
+  });
+  revalidatePath("/designer");
+}
+
 export async function avancarPedido(formData: FormData): Promise<void> {
   const u = await exigirMkt();
   const id = String(formData.get("id") ?? "");

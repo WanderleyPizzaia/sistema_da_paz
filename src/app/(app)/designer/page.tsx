@@ -2,7 +2,7 @@ import { requireUser } from "@/lib/session";
 import { podeOperarMarketing } from "@/lib/authz";
 import SemAcesso from "@/components/SemAcesso";
 import { prisma } from "@/lib/prisma";
-import { avancarPedido } from "@/lib/actions/producao";
+import { avancarPedido, definirPastaPedido } from "@/lib/actions/producao";
 import {
   STATUS_PEDIDO,
   STATUS_PEDIDO_LABEL,
@@ -105,6 +105,42 @@ export default async function DesignerPage() {
                             : ""}
                         </p>
                       )}
+
+                      {/* Pasta do pedido no Google Drive */}
+                      <div className="mt-2.5 border-t border-gray-100 pt-2">
+                        {p.pastaUrl ? (
+                          <a
+                            href={p.pastaUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--paz-navy)] hover:underline"
+                          >
+                            📁 Abrir pasta no Drive
+                          </a>
+                        ) : (
+                          <p className="text-[11px] text-gray-400">
+                            Pasta sugerida:{" "}
+                            <span className="font-medium text-gray-500">
+                              Pedido #{String(p.numero).padStart(4, "0")}
+                            </span>
+                          </p>
+                        )}
+                        <form
+                          action={definirPastaPedido}
+                          className="mt-1.5 flex gap-1.5"
+                        >
+                          <input type="hidden" name="id" value={p.id} />
+                          <input
+                            name="pastaUrl"
+                            defaultValue={p.pastaUrl ?? ""}
+                            placeholder="Colar link da pasta no Drive"
+                            className="min-w-0 flex-1 rounded border border-gray-200 px-2 py-1 text-xs text-gray-700 outline-none focus:border-[var(--paz-navy)]"
+                          />
+                          <button className="shrink-0 rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50">
+                            Salvar
+                          </button>
+                        </form>
+                      </div>
                     </li>
                   );
                 })}
