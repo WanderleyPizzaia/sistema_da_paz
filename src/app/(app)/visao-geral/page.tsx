@@ -14,6 +14,23 @@ import {
 
 const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
+// Tema/campanha de conscientização do mês — a "frente" que o cliente pediu
+// ("quando entro em novembro, Novembro Azul"). Muda conforme o mês.
+const TEMA_MES: Record<number, { nome: string; descricao: string; cor: string; emoji: string }> = {
+  0: { nome: "Janeiro Branco", descricao: "Saúde mental e bem-estar", cor: "#94a3b8", emoji: "🤍" },
+  1: { nome: "Fevereiro Laranja", descricao: "Conscientização sobre a leucemia", cor: "#fb923c", emoji: "🧡" },
+  2: { nome: "Março Lilás", descricao: "Saúde e direitos da mulher", cor: "#c084fc", emoji: "💜" },
+  3: { nome: "Abril Verde", descricao: "Saúde e segurança no trabalho", cor: "#4ade80", emoji: "💚" },
+  4: { nome: "Maio Amarelo", descricao: "Trânsito mais seguro", cor: "#facc15", emoji: "💛" },
+  5: { nome: "Junho Vermelho", descricao: "Doação de sangue", cor: "#f87171", emoji: "❤️" },
+  6: { nome: "Julho Amarelo", descricao: "Prevenção às hepatites virais", cor: "#facc15", emoji: "💛" },
+  7: { nome: "Agosto Dourado", descricao: "Incentivo à amamentação", cor: "#fcd34d", emoji: "🥇" },
+  8: { nome: "Setembro Amarelo", descricao: "Valorização da vida", cor: "#facc15", emoji: "💛" },
+  9: { nome: "Outubro Rosa", descricao: "Prevenção do câncer de mama", cor: "#f472b6", emoji: "🎀" },
+  10: { nome: "Novembro Azul", descricao: "Saúde do homem", cor: "#60a5fa", emoji: "💙" },
+  11: { nome: "Dezembro Vermelho", descricao: "Prevenção à AIDS e fim de ano", cor: "#f87171", emoji: "❤️" },
+};
+
 export default async function VisaoGeralPage({ searchParams }: { searchParams: Promise<{ periodo?: string }> }) {
   const u = await requireUser();
   const mes = mesRefAtual();
@@ -180,6 +197,26 @@ export default async function VisaoGeralPage({ searchParams }: { searchParams: P
             </nav>
           </div>
           <p className="mt-1 text-sm text-blue-100">O trabalho de marketing do mês nos postos, PAZ365 e E-Stop</p>
+
+          <div
+            className="mt-4 flex items-center gap-3 rounded-2xl bg-white/10 p-3"
+            style={{ borderLeft: `4px solid ${TEMA_MES[mesAtual].cor}` }}
+          >
+            <span className="text-2xl leading-none" aria-hidden="true">
+              {TEMA_MES[mesAtual].emoji}
+            </span>
+            <div>
+              <p className="text-[11px] tracking-[0.13em] text-blue-100">
+                TEMA DO MÊS
+              </p>
+              <p className="text-lg font-bold leading-tight">
+                {TEMA_MES[mesAtual].nome}
+                <span className="ml-2 text-sm font-normal text-blue-100">
+                  · {TEMA_MES[mesAtual].descricao}
+                </span>
+              </p>
+            </div>
+          </div>
 
           <div className="mt-5 mb-3 flex flex-wrap items-end justify-between gap-3">
             <div>

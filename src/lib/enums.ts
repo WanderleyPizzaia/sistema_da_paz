@@ -46,7 +46,7 @@ export const ETAPA_LABEL: Record<string, string> = {
   OPERACAO: "Em operação",
 };
 
-export const FAROIS = ["VERDE", "AMARELO", "VERMELHO"] as const;
+export const FAROIS = ["VERDE", "AMARELO", "VERMELHO", "NEUTRO"] as const;
 export type Farol = (typeof FAROIS)[number];
 
 export const FAROL_INFO: Record<
@@ -69,6 +69,12 @@ export const FAROL_INFO: Record<
     label: "Vermelho",
     descricao: "Abaixo da meta — precisa de ação",
     cor: "#dc2626",
+    corTexto: "#ffffff",
+  },
+  NEUTRO: {
+    label: "Normal",
+    descricao: "Situação normal, sem alerta",
+    cor: "#64748b",
     corTexto: "#ffffff",
   },
 };
