@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import {
@@ -11,7 +12,9 @@ const PILARES = [
   { titulo: "Perto e aberto", desc: "Loja no posto, de bairro, aberta até tarde." },
   { titulo: "Café quente e padaria", desc: "Café fresco e pão quente puxam o movimento." },
   { titulo: "Reposição rápida", desc: "Itens do dia a dia sempre na prateleira." },
-  { titulo: "Combos e ofertas", desc: "Ofertas da semana e combos divulgados no WhatsApp." },
+  { titulo: "Combos e ofertas da semana", desc: "Ofertas e combos divulgados no WhatsApp." },
+  { titulo: "Pedido pelo WhatsApp", desc: "Planejamento de pedidos para retirada na loja." },
+  { titulo: "Clube PAZ365", desc: "Proposta de fidelidade para quem volta toda semana." },
 ];
 
 export default async function Paz365Page() {
@@ -19,17 +22,22 @@ export default async function Paz365Page() {
   void u;
   const mes = mesRefAtual();
 
-  const [postos, mix] = await Promise.all([
+  const [postos, mix, clientes, ofertas] = await Promise.all([
     prisma.posto.findMany({
       include: { metricas: { where: { mes } } },
       orderBy: { nome: "asc" },
     }),
     prisma.mixCategoria.findMany({ orderBy: { ordem: "asc" } }),
+    prisma.cliente.count({ where: { postoPreferido: { temPaz365: true } } }),
+    prisma.campanha.findMany({
+      where: { status: "ATIVA", tipo: { in: ["OFERTA", "CUPOM"] }, postos: { some: { temPaz365: true } } },
+      orderBy: { criadoEm: "desc" },
+    }),
   ]);
 
   const lojas = postos.filter((p) => p.temPaz365);
   const emOperacao = lojas.filter((p) => p.etapa === "OPERACAO");
-  const vendasSemana = lojas.reduce(
+  const vendasMes = lojas.reduce(
     (s, p) => s + (p.metricas[0]?.vendas ?? 0),
     0,
   );
@@ -43,23 +51,25 @@ export default async function Paz365Page() {
   const porEtapa = ETAPAS.map((e) => ({
     etapa: e,
     label: ETAPA_LABEL[e],
-    postos: postos.filter((p) => p.etapa === e),
+    postos: lojas.filter((p) => p.etapa === e),
   }));
   const maxMix = Math.max(1, ...mix.map((m) => m.participacao));
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="min-h-screen bg-[#fbf5f5] p-5 lg:p-8"><div className="max-w-[1176px]">
       {/* Hero */}
       <div className="mb-6 overflow-hidden rounded-2xl bg-[var(--paz-red)] p-6 text-white">
-        <h1 className="text-2xl font-black">PAZ365</h1>
+        <p className="text-xs tracking-widest text-white/90">FOCO DA ESTRATÉGIA</p>
+        <h1 className="text-4xl font-semibold">PAZ365</h1>
         <p className="mt-1 max-w-2xl text-sm text-white/85">
           De loja de conveniência do posto para uma rede de mini mercados de
           bairro, perto de casa, com café quente e reposição rápida.
         </p>
-        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
           <Hero titulo="Lojas em operação" valor={emOperacao.length} />
-          <Hero titulo="Vendas no mês" valor={formatBRL(vendasSemana)} />
+          <Hero titulo="Vendas no mês" valor={formatBRL(vendasMes)} />
           <Hero titulo="Ticket médio" valor={formatBRL(ticketMedio)} />
+          <Hero titulo="Clientes com posto PAZ365 preferido" valor={clientes} />
         </div>
       </div>
 
@@ -68,7 +78,7 @@ export default async function Paz365Page() {
         <h2 className="mb-3 font-semibold text-gray-900">
           Pilares do mini mercado PAZ365
         </h2>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {PILARES.map((p) => (
             <div
               key={p.titulo}
@@ -83,7 +93,7 @@ export default async function Paz365Page() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Mapa de expansão */}
-        <section className="rounded-xl border border-gray-200 bg-white p-5">
+        <section id="expansao" className="rounded-xl border border-gray-200 bg-white p-5">
           <h2 className="mb-4 font-semibold text-gray-900">Mapa de expansão</h2>
           <div className="space-y-3">
             {porEtapa.map((e) => (
@@ -175,6 +185,22 @@ export default async function Paz365Page() {
           </div>
         )}
       </section>
+      <section id="ofertas" className="mt-5 rounded-2xl border border-gray-200 bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-bold">Ofertas e combos</h2>
+          <Link href="/campanhas/novo" className="rounded-lg bg-[#be2530] px-3 py-2 text-sm font-semibold !text-white">+ Nova oferta</Link>
+        </div>
+        {ofertas.length ? <ul className="mt-3 grid gap-3 sm:grid-cols-3">
+          {ofertas.map((oferta) => <li key={oferta.id}><Link href={`/campanhas/${oferta.id}`} className="block rounded-xl border border-gray-200 p-4 text-sm font-semibold">{oferta.nome}</Link></li>)}
+        </ul> : <p className="mt-2 text-sm text-gray-600">Nenhuma oferta ativa vinculada a uma loja PAZ365.</p>}
+      </section>
+      <section className="mt-5 rounded-2xl border border-gray-200 bg-white p-5">
+        <h2 className="mb-3 text-lg font-bold">Marketing da PAZ365</h2>
+        <div className="flex flex-wrap gap-2">
+          {[["Pedir arte", "/designer#novo"], ["Pedir vídeo", "/videos#pedido"], ["Ver clientes PAZ365", "/clientes?segmento=paz365"], ["Preparar disparo", "/whatsapp?aba=disparos"]].map(([titulo, href]) => <Link key={href} href={href} className="rounded-lg border px-3 py-2 text-sm font-semibold">{titulo}</Link>)}
+        </div>
+      </section>
+      </div>
     </div>
   );
 }

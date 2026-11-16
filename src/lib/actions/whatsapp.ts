@@ -107,3 +107,28 @@ export async function alternarAutomacao(formData: FormData): Promise<void> {
   });
   revalidatePath("/whatsapp");
 }
+
+export async function registrarFunilQr(formData: FormData): Promise<void> {
+  const u = await requireUser();
+  exigir(podeOperarMarketing(u));
+  const id = String(formData.get("id") ?? "");
+  const dias = Number(formData.get("dias"));
+  const condicao = String(formData.get("condicao") ?? "").trim().slice(0, 300);
+  const sim = String(formData.get("sim") ?? "").trim().slice(0, 300);
+  const nao = String(formData.get("nao") ?? "").trim().slice(0, 300);
+  if (!Number.isInteger(dias) || dias < 1 || dias > 365 || !condicao || !sim || !nao) return;
+  const { count } = await prisma.automacao.updateMany({
+    where: { id, gatilho: "CADASTRO_QR" },
+    data: { funilQrRegistradoEm: new Date(), funilQr: { dias, condicao, sim, nao } },
+  });
+  if (count) {
+    await registrar({
+      userId: u.id,
+      acao: "automacao.funil.registrar",
+      entidade: "Automacao",
+      entidadeId: id,
+      detalhe: `Acompanhamento QR · ${dias} dia(s) · ${condicao}`,
+    });
+  }
+  revalidatePath("/whatsapp");
+}

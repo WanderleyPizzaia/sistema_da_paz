@@ -4,7 +4,8 @@ import { requireUser } from "@/lib/session";
 import { podeOperarMarketing } from "@/lib/authz";
 import SemAcesso from "@/components/SemAcesso";
 import { prisma } from "@/lib/prisma";
-import { definirStatusCampanha, sortear } from "@/lib/actions/campanhas";
+import PaletaCampanha from "@/components/PaletaCampanha";
+import { definirCorCampanha, definirStatusCampanha, sortear } from "@/lib/actions/campanhas";
 import {
   TIPO_CAMPANHA_LABEL,
   STATUS_CAMPANHA_INFO,
@@ -84,6 +85,12 @@ export default async function CampanhaPage({
           </form>
         ))}
       </div>
+
+      <form action={definirCorCampanha} className="mb-6 space-y-3 rounded-xl border border-gray-200 bg-white p-4">
+        <input type="hidden" name="id" value={campanha.id} />
+        <PaletaCampanha selecionada={campanha.corDestaque} />
+        <button className="rounded-lg bg-[#304299] px-3 py-2 text-sm font-semibold text-white">Salvar cor</button>
+      </form>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Postos participantes */}

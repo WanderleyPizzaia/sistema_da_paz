@@ -1,14 +1,24 @@
+import Link from "next/link";
+import { diaAtualCampanhas } from "@/lib/calendario-campanhas";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { marcarAcaoFeita } from "@/lib/actions/gerente";
 
-export default async function GerenteAcoesPage() {
+export default async function GerenteAcoesPage({ searchParams }: { searchParams: Promise<{ periodo?: string }> }) {
   const u = await getSession();
   if (!u || !u.postoId) redirect("/login");
 
+  const mensal = (await searchParams).periodo === "mes";
+  const hoje = diaAtualCampanhas();
+  const ano = hoje.getUTCFullYear();
+  const mes = hoje.getUTCMonth();
+  const segunda = hoje.getUTCDate() - (hoje.getUTCDay() + 6) % 7;
+  const inicio = new Date(Date.UTC(ano, mes, mensal ? 1 : segunda));
+  const fim = mensal ? new Date(Date.UTC(ano, mes + 1, 1)) : new Date(Date.UTC(ano, mes, segunda + 7));
+
   const acoes = await prisma.acaoMarketing.findMany({
-    where: { postoId: u.postoId },
+    where: { postoId: u.postoId, OR: [{ data: null }, { data: { gte: inicio, lt: fim } }] },
     orderBy: [{ status: "asc" }, { criadoEm: "desc" }],
   });
 
@@ -16,10 +26,14 @@ export default async function GerenteAcoesPage() {
 
   return (
     <div className="p-4">
-      <h1 className="mb-1 text-lg font-bold text-gray-900">Ações locais</h1>
-      <p className="mb-4 text-sm text-gray-500">
-        {pendentes.length} pendente(s). Marque como feita e envie a foto.
-      </p>
+      <section className="mb-4 rounded-2xl bg-gradient-to-br from-[#344197] to-[#1d245e] p-4 text-white">
+        <h1 className="text-2xl font-bold">Ações locais</h1>
+        <p className="mt-1 text-sm text-blue-100">{pendentes.length} pendente(s) · {acoes.length - pendentes.length} concluída(s)</p>
+        <nav aria-label="Período das ações" className="mt-3 flex gap-2">
+          <Link href="/gerente?periodo=semana" aria-current={!mensal ? "true" : undefined} className={`rounded-lg px-3 py-2 text-xs font-semibold ${!mensal ? "bg-white !text-[#304299]" : "bg-white/10 !text-white"}`}>Esta semana</Link>
+          <Link href="/gerente?periodo=mes" aria-current={mensal ? "true" : undefined} className={`rounded-lg px-3 py-2 text-xs font-semibold ${mensal ? "bg-white !text-[#304299]" : "bg-white/10 !text-white"}`}>Este mês</Link>
+        </nav>
+      </section>
 
       {acoes.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">

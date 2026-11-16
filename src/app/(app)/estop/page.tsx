@@ -4,10 +4,11 @@ import { podeOperarMarketing } from "@/lib/authz";
 import SemAcesso from "@/components/SemAcesso";
 import { prisma } from "@/lib/prisma";
 import { mudarStatusPonto } from "@/lib/actions/producao";
-import { STATUS_ESTOP, STATUS_ESTOP_INFO, corPrazo } from "@/lib/enums";
+import { STATUS_ESTOP, STATUS_ESTOP_INFO, STATUS_PEDIDO_LABEL, corPrazo } from "@/lib/enums";
+import NovoPedidoForm from "../designer/NovoPedidoForm";
 import NovoPontoForm from "./NovoPontoForm";
 
-export default async function EStopPage() {
+export default async function EStopPage({ searchParams }: { searchParams: Promise<{ q?: string; tipo?: string }> }) {
   const u = await requireUser();
   if (!podeOperarMarketing(u)) return <SemAcesso />;
 
@@ -31,46 +32,49 @@ export default async function EStopPage() {
   const postosComPonto = new Set(pontos.map((p) => p.postoId)).size;
   const pedidosAbertos = pedidos.filter((p) => p.status !== "ENTREGUE").length;
 
-  return (
-    <div className="p-6 lg:p-8">
-      {/* Hero verde (carregamento elétrico) */}
-      <div className="mb-6 rounded-2xl bg-gradient-to-br from-green-600 to-green-700 p-6 text-white">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 text-2xl">
-            ⚡
-          </span>
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-white/70">
-              Carregamento elétrico
-            </p>
-            <h1 className="text-2xl font-black leading-tight">E-Stop</h1>
-          </div>
-        </div>
-        <p className="mt-2 max-w-2xl text-sm text-white/85">
-          Pedidos de marketing e pontos de recarga para carros elétricos da Rede
-          Paz.
-        </p>
-        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <HeroStat
-            titulo="Pontos de recarga"
-            valor={pontos.length}
-            sub={`em ${postosComPonto} posto(s)`}
-          />
-          <HeroStat
-            titulo="Clientes elétricos"
-            valor={clientesEletricos}
-            sub="na base"
-          />
-          <HeroStat
-            titulo="Pedidos E-Stop abertos"
-            valor={pedidosAbertos}
-            sub="artes e vídeos"
-          />
-          <HeroStat titulo="Recargas no mês" valor="—" sub="sem integração" />
-        </div>
-      </div>
+  const { q, tipo } = await searchParams;
+  const busca = typeof q === "string" ? q.trim() : "";
+  const coincide = (texto: string) => texto.toLocaleLowerCase("pt-BR").includes(busca.toLocaleLowerCase("pt-BR"));
+  const sinalizacao = (formato: string | null) => /placa|adesivo|totem|sinaliza/i.test(formato ?? "");
+  const filtrados = pedidos.filter((p) => coincide([p.acao, p.posto?.nome].join(" ")) &&
+    (tipo === "sinalizacao" ? sinalizacao(p.formato) : tipo === "arte" ? !sinalizacao(p.formato) : true));
+  const filtroHref = (tipo: string) => "/estop?" + new URLSearchParams({ q: busca, tipo });
 
-      <div className="grid gap-6 lg:grid-cols-2">
+  return (
+    <div className="min-h-screen bg-[#f2f8f4]">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-white px-5 py-4 lg:px-8">
+        <div><p className="text-xl font-bold">E-Stop</p><p className="text-xs text-gray-600">Carregamento elétrico nos postos Rede Paz</p></div>
+        <form action="/estop" className="flex gap-2">
+          <input name="q" aria-label="Buscar pedido ou posto" placeholder="Buscar pedido ou posto" defaultValue={busca} className="min-w-0 rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+          <button className="rounded-xl border px-3 py-2 text-sm font-semibold">Buscar</button>
+        </form>
+      </header>
+      <div className="max-w-[1240px] space-y-5 p-5 lg:p-8">
+        <section className="relative isolate overflow-hidden rounded-[20px] bg-gradient-to-br from-[#255a29] to-[#3b8234] p-6 text-white shadow-[0_14px_32px_#2e773845]">
+          <span aria-hidden="true" className="absolute -right-24 -top-40 -z-10 size-80 rounded-full bg-white/10" />
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <span aria-hidden="true" className="grid size-16 shrink-0 place-items-center rounded-2xl bg-[#4a9c40] text-4xl">ϟ</span>
+              <div>
+                <p className="text-xs tracking-widest text-green-100">CARREGAMENTO ELÉTRICO</p>
+                <h1 className="mt-1 text-4xl font-semibold">E-Stop</h1>
+                <p className="mt-2 text-sm text-green-100">Pedidos de marketing e pontos de recarga para carros elétricos</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <a href="#pontos" className="rounded-xl border border-white/30 bg-white/10 px-4 py-3 text-sm font-semibold !text-white">Ver pontos de recarga</a>
+              <a href="#novo" className="rounded-xl bg-[#244f25] px-4 py-3 text-sm font-semibold !text-white">+ Pedido E-Stop</a>
+            </div>
+          </div>
+          <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <HeroStat titulo="Pontos de recarga" valor={pontos.length} sub={`em ${postosComPonto} posto(s)`} />
+            <HeroStat titulo="Recargas no mês" valor="—" sub="Dados da plataforma de recarga" />
+            <HeroStat titulo="Clientes com carro elétrico" valor={clientesEletricos} sub="na base de clientes" />
+            <HeroStat titulo="Pedidos E-Stop abertos" valor={pedidosAbertos} sub="artes e sinalização" />
+          </div>
+        </section>
+
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
         {/* Pedidos E-Stop */}
         <section className="rounded-xl border border-gray-200 bg-white p-5">
           <div className="mb-1 flex items-center justify-between">
@@ -85,21 +89,24 @@ export default async function EStopPage() {
           <p className="mb-4 text-xs text-gray-500">
             Artes seguem o prazo de 24h e aparecem na fila do Designer.
           </p>
-          {pedidos.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              Nenhum pedido E-Stop ainda. Crie no Designer marcando “É um pedido
-              E-Stop”.
-            </p>
+          <nav aria-label="Filtrar pedidos" className="mb-3 flex flex-wrap gap-2">
+            {[["", "Todos"], ["arte", "Arte"], ["sinalizacao", "Sinalização"]].map(([id, nome]) =>
+              <Link key={id} href={filtroHref(id)} aria-current={(tipo ?? "") === id ? "true" : undefined}
+                className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${(tipo ?? "") === id ? "bg-[#2d6d31] !text-white" : "bg-white"}`}>{nome}</Link>)}
+          </nav>
+          {filtrados.length === 0 ? (
+            <p className="text-sm text-gray-500">Nenhum pedido E-Stop encontrado.</p>
           ) : (
             <ul className="divide-y divide-gray-100">
-              {pedidos.map((p) => {
+              {filtrados.map((p) => {
                 const prazo = corPrazo(p.prazo);
                 return (
                   <li key={p.id} className="py-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900">
-                          #{p.numero} · {p.acao}
+                        <p className="mb-1 text-xs text-gray-600">#{p.numero} · {sinalizacao(p.formato) ? "Sinalização" : "Arte"} · {STATUS_PEDIDO_LABEL[p.status] ?? p.status}</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {p.acao}
                         </p>
                         <p className="text-xs text-gray-500">
                           {[p.posto?.nome, p.formato]
@@ -133,16 +140,31 @@ export default async function EStopPage() {
           )}
         </section>
 
+          <section className="rounded-xl border border-gray-200 bg-white p-5">
+            <h2 className="font-semibold">Pautas para o E-Stop</h2>
+            <p className="mt-1 text-xs text-gray-600">Ideias de conteúdo com o olhar das pessoas</p>
+            <ul className="divide-y divide-gray-100">
+              {[
+                ["Enquanto carrega, um café quente na PAZ365", "Vídeo · como aproveitar o tempo da recarga"],
+                ["Primeira vez carregando? O frentista explica", "Reels · passo a passo com a equipe"],
+                ["Quem anda de elétrico em São Paulo", "Série · histórias de clientes da rede"],
+                ["Onde tem E-Stop: mapa dos pontos", "Carrossel · postos com rota no Waze"],
+              ].map(([titulo, formato]) => <li key={titulo} className="py-3"><p className="text-sm font-semibold">{titulo}</p><p className="mt-1 text-xs text-gray-600">{formato}</p></li>)}
+            </ul>
+            <Link href="/videos#ideias" className="mt-2 block rounded-xl border border-gray-200 px-3 py-2 text-center text-sm font-semibold">Abrir banco de ideias</Link>
+          </section>
+        </div>
+
         {/* Pontos de recarga */}
-        <section className="rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="mb-1 font-semibold text-gray-900">Pontos de recarga</h2>
+        <section id="pontos" className="rounded-xl border border-gray-200 bg-white p-5">
+          <h2 className="mb-1 text-lg font-semibold text-gray-900">Pontos de recarga E-Stop</h2>
           <p className="mb-4 text-xs text-gray-500">
-            Clientes com carro elétrico viram segmento para disparos.
+            A equipe atualiza manualmente o status dos pontos.
           </p>
 
           {pontos.length > 0 && (
-            <ul className="mb-5 space-y-3">
-              {pontos.map((p) => {
+            <ul className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {pontos.filter((p) => coincide(p.posto.nome)).map((p) => {
                 const info = STATUS_ESTOP_INFO[p.status];
                 return (
                   <li
@@ -172,6 +194,10 @@ export default async function EStopPage() {
                         {info?.label ?? p.status}
                       </span>
                     </div>
+                    <div className="mb-3 flex flex-wrap gap-2 text-xs">
+                      <Link href={`/postos/${p.postoId}`} className="font-semibold underline">Abrir posto</Link>
+                      <a href="#novo" className="font-semibold underline">Pedir divulgação</a>
+                    </div>
                     <div className="flex flex-wrap gap-1.5">
                       {STATUS_ESTOP.map((s) => (
                         <form key={s} action={mudarStatusPonto}>
@@ -197,11 +223,16 @@ export default async function EStopPage() {
           )}
 
           <div className="border-t border-gray-100 pt-4">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">
-              Novo ponto de recarga
-            </p>
-            <NovoPontoForm postos={postos} />
+            <details>
+              <summary className="cursor-pointer text-sm font-semibold">+ Cadastrar ponto E-Stop</summary>
+              <div className="mt-3"><NovoPontoForm postos={postos} /></div>
+            </details>
           </div>
+        </section>
+        <section id="novo" className="rounded-xl border border-gray-200 bg-white p-5">
+          <h2 className="text-lg font-semibold">Novo pedido E-Stop</h2>
+          <p className="mb-4 text-sm text-gray-600">Artes e peças de sinalização entram na fila do Designer com prazo inicial de 24h.</p>
+          <NovoPedidoForm postos={postos.filter((posto) => pontos.some((ponto) => ponto.postoId === posto.id))} estop />
         </section>
       </div>
     </div>
@@ -218,7 +249,7 @@ function HeroStat({
   sub: string;
 }) {
   return (
-    <div className="rounded-xl bg-white/10 px-3 py-3">
+    <div className="rounded-xl border border-white/20 bg-white/10 px-4 py-3">
       <p className="text-[11px] text-white/70">{titulo}</p>
       <p className="mt-0.5 text-2xl font-bold">{valor}</p>
       <p className="text-[11px] text-white/60">{sub}</p>

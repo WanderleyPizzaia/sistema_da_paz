@@ -52,3 +52,18 @@ export async function alternarQR(formData: FormData): Promise<void> {
   });
   revalidatePath(`/postos/${qr.postoId}`);
 }
+
+export async function gerarQrWhatsappPosto(formData: FormData): Promise<void> {
+  const u = await requireUser();
+  exigir(podeOperarMarketing(u));
+  const postoId = String(formData.get("postoId") ?? "");
+  const posto = await prisma.posto.findUnique({ where: { id: postoId }, select: { id: true } });
+  if (!posto) return;
+
+  await prisma.qrWhatsappPosto.upsert({
+    where: { postoId },
+    create: { postoId },
+    update: {},
+  });
+  revalidatePath("/campanhas");
+}

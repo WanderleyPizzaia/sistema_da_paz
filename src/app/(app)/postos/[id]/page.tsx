@@ -36,6 +36,9 @@ export default async function PostoPage({
   const posto = await prisma.posto.findUnique({
     where: { id },
     include: {
+      pontosEStop: { orderBy: { criadoEm: "asc" } },
+      gerentes: { where: { ativo: true }, select: { nome: true } },
+      _count: { select: { clientes: true } },
       status: { where: { mesRef: mesRefAtual() } },
       acoes: { orderBy: { criadoEm: "desc" } },
       qrcodes: {
@@ -68,40 +71,53 @@ export default async function PostoPage({
     metAnterior?.vendas,
   );
 
-  return (
-    <div className="p-6 lg:p-8">
-      <div className="mb-6">
-        <Link
-          href="/postos"
-          className="text-sm text-gray-500 hover:text-gray-700"
-        >
-          ← Postos
-        </Link>
-        <div className="mt-1 flex flex-wrap items-center gap-3">
-          <h1 className="text-xl font-bold text-gray-900">{posto.nome}</h1>
-          <FarolBadge farol={farolAtual} />
-          {isAdm(u) && (
-            <Link
-              href={`/postos/${posto.id}/editar`}
-              className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Editar
-            </Link>
-          )}
-        </div>
-        <p className="text-sm text-gray-500">
-          {BANDEIRA_LABEL[posto.bandeira] ?? posto.bandeira}
-          {posto.temPaz365 ? " · PAZ365" : ""} ·{" "}
-          {ETAPA_LABEL[posto.etapa] ?? posto.etapa}
-          {posto.endereco ? ` · ${posto.endereco}` : ""}
-        </p>
-      </div>
+  const fotos = posto.acoes.filter((acao) => acao.fotoEnviada);
+  const acoesMes = posto.acoes.filter((acao) => acao.data?.toISOString().slice(0, 7) === mes);
+  const local = posto.lat != null && posto.lng != null ? `${posto.lat},${posto.lng}` : (posto.endereco || posto.nome);
+  const waze = "https://www.waze.com/ul?" + new URLSearchParams({ [posto.lat != null && posto.lng != null ? "ll" : "q"]: local, navigate: "yes" });
+  const maps = "https://www.google.com/maps/search/?" + new URLSearchParams({ api: "1", query: local });
+  const botao = "rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold hover:bg-gray-50";
 
-      <div className="grid gap-6 lg:grid-cols-2">
+  return (
+    <div className="min-h-screen bg-[#f4f5fa]">
+      <div className="max-w-[1240px] p-5 lg:p-8">
+        <nav aria-label="Localização" className="mb-4 text-sm text-gray-600">
+          <Link href="/postos" className="hover:underline">Postos</Link>
+          <span aria-hidden="true"> › </span><span aria-current="page">{posto.nome}</span>
+        </nav>
+        <header className="mb-5 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="grid h-44 place-items-center bg-[repeating-linear-gradient(45deg,#e8eaf0_0_6px,#f2f3f6_6px_12px)] text-sm text-gray-600">Foto da fachada</div>
+          <div className="flex flex-wrap items-end justify-between gap-4 p-5">
+            <div>
+              <div className="mb-2 flex flex-wrap gap-2 text-xs">
+                <span className="rounded-full bg-gray-100 px-2.5 py-1">{BANDEIRA_LABEL[posto.bandeira] ?? posto.bandeira}</span>
+                {posto.temPaz365 && <span className="rounded-full bg-red-50 px-2.5 py-1 text-red-800">PAZ365</span>}
+                <span className="rounded-full bg-gray-100 px-2.5 py-1">{ETAPA_LABEL[posto.etapa] ?? posto.etapa}</span>
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight">{posto.nome}</h1>
+              <p className="mt-1 text-sm text-gray-600">{posto.endereco ?? "Endereço pendente"}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <a href={waze} target="_blank" rel="noreferrer" className={botao}>Abrir no Waze</a>
+              <a href={maps} target="_blank" rel="noreferrer" className={botao}>Ver no Google Maps</a>
+              {isAdm(u) && <Link href={`/postos/${posto.id}/editar`} className={botao}>Editar dados</Link>}
+            </div>
+          </div>
+        </header>
+
+        <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="rounded-xl border border-gray-100 bg-white px-3 py-2.5">
+            <p className="mb-1 text-[11px] text-gray-500">Status do mês</p><FarolBadge farol={farolAtual} />
+          </div>
+          <Metrica titulo="Rotas no Google (mês)" valor={metAtual?.pedidosRota ?? "—"} />
+          <Metrica titulo="Ações no mês" valor={acoesMes.length} />
+          <Metrica titulo="Ações com foto" valor={fotos.length} />
+        </div>
+        <div className="grid gap-5 lg:grid-cols-2">
         {/* Farol do mês */}
         <section className="rounded-xl border border-gray-200 bg-white p-5">
           <h2 className="mb-1 font-semibold text-gray-900">
-            Status do mês ({mes})
+            Como está esse posto este mês?
           </h2>
           <p className="mb-4 text-sm text-gray-500">
             Verde = vendas melhores que o mês anterior · Amarelo = normal ·
@@ -180,8 +196,35 @@ export default async function PostoPage({
           )}
         </section>
 
+      {/* Google Meu Negócio (tela 08) */}
+      <section className="rounded-xl border border-gray-200 bg-white p-5">
+        <h2 className="mb-1 font-semibold text-gray-900">
+          Google Meu Negócio e vendas
+        </h2>
+        <p className="mb-4 text-sm text-gray-500">
+          Dados do mês (simulados a partir do Google Business Profile e do PDV).
+        </p>
+        {metAtual ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <Metrica titulo="Vendas" valor={formatBRL(metAtual.vendas)} />
+            <Metrica titulo="Ticket médio" valor={formatBRL(metAtual.ticketMedio)} />
+            <Metrica
+              titulo="Nota Google"
+              valor={metAtual.notaGoogle ? `★ ${metAtual.notaGoogle}` : "—"}
+            />
+            <Metrica titulo="Avaliações" valor={metAtual.avaliacoes} />
+            <Metrica titulo="Pedidos de rota" valor={metAtual.pedidosRota} />
+            <Metrica titulo="Visualizações" valor={metAtual.visualizacoes} />
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">
+            Sem métricas para este mês ainda.
+          </p>
+        )}
+      </section>
+
         {/* Ações de marketing */}
-        <section className="rounded-xl border border-gray-200 bg-white p-5">
+        <section id="acoes-marketing" className="rounded-xl border border-gray-200 bg-white p-5">
           <h2 className="mb-4 font-semibold text-gray-900">
             Ações de marketing
           </h2>
@@ -279,31 +322,36 @@ export default async function PostoPage({
         </section>
       </div>
 
-      {/* Google Meu Negócio e vendas (tela 08) */}
-      <section className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="mb-1 font-semibold text-gray-900">
-          Google Meu Negócio e vendas
-        </h2>
-        <p className="mb-4 text-sm text-gray-500">
-          Dados do mês (simulados a partir do Google Business Profile e do PDV).
-        </p>
-        {metAtual ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            <Metrica titulo="Vendas" valor={formatBRL(metAtual.vendas)} />
-            <Metrica titulo="Ticket médio" valor={formatBRL(metAtual.ticketMedio)} />
-            <Metrica
-              titulo="Nota Google"
-              valor={metAtual.notaGoogle ? `★ ${metAtual.notaGoogle}` : "—"}
-            />
-            <Metrica titulo="Avaliações" valor={metAtual.avaliacoes} />
-            <Metrica titulo="Pedidos de rota" valor={metAtual.pedidosRota} />
-            <Metrica titulo="Visualizações" valor={metAtual.visualizacoes} />
+      <section className="mt-5 rounded-xl border border-gray-200 bg-white p-5">
+        <h2 className="mb-3 font-bold">Dados do posto</h2>
+        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Metrica titulo="Gerentes" valor={posto.gerentes.map((gerente) => gerente.nome).join(", ") || "—"} />
+          <Metrica titulo="Loja" valor={posto.temPaz365 ? "PAZ365" : "—"} />
+          <Metrica titulo="Clientes cadastrados" valor={posto._count.clientes} />
+          <Metrica titulo="QR Codes ativos" valor={posto.qrcodes.filter((qr) => qr.ativo).length} />
+        </dl>
+        <div className="mt-4 border-t pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="font-semibold">Carregadores E-Stop</h3><Link href="/estop" className={botao}>Ver no E-Stop</Link>
           </div>
-        ) : (
-          <p className="text-sm text-gray-500">
-            Sem métricas para este mês ainda.
-          </p>
-        )}
+          {posto.pontosEStop.length ? <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+            {posto.pontosEStop.map((ponto) => <li key={ponto.id} className="rounded-lg bg-gray-50 p-3 text-sm">
+              <strong>{ponto.numCarregadores} {ponto.numCarregadores === 1 ? "carregador" : "carregadores"}</strong>
+              <p>{[ponto.potenciaKw != null && ponto.potenciaKw + " kW", ponto.conector, ponto.horario].filter(Boolean).join(" · ")}</p>
+              <p className="text-xs text-gray-600">{ponto.status.replaceAll("_", " ").toLocaleLowerCase("pt-BR")}</p>
+            </li>)}
+          </ul> : <p className="text-sm text-gray-600">Nenhum carregador cadastrado.</p>}
+        </div>
+      </section>
+
+      <section id="fotos" className="mt-5 rounded-xl border border-gray-200 bg-white p-5">
+        <h2 className="mb-3 font-bold">Fotos das ações</h2>
+        {fotos.length ? <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {fotos.map((acao) => <li key={acao.id} className="rounded-lg border border-gray-200 p-3 text-sm">
+            <strong>{acao.titulo}</strong>
+            <p className="text-xs text-gray-600">{acao.fotoAprovada ? "Foto aprovada" : "Foto registrada"}</p>
+          </li>)}
+        </ul> : <p className="text-sm text-gray-600">Ainda não há ações com foto registrada.</p>}
       </section>
 
       {/* Captação por QR Code (tela 06 na bomba) */}
@@ -400,6 +448,7 @@ export default async function PostoPage({
           </ul>
         )}
       </section>
+      </div>
     </div>
   );
 }
@@ -412,7 +461,7 @@ function Metrica({
   valor: string | number;
 }) {
   return (
-    <div className="rounded-lg border border-gray-100 px-3 py-2.5">
+    <div className="rounded-lg border border-gray-100 bg-white px-3 py-2.5">
       <p className="text-[11px] text-gray-500">{titulo}</p>
       <p className="mt-0.5 text-base font-bold text-gray-900">{valor}</p>
     </div>

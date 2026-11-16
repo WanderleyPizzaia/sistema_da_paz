@@ -48,6 +48,7 @@ model Posto {
   acoes     AcaoMarketing[]
   clientes  Cliente[]       @relation("ClientesDoPosto")
   qrcodes   QRCode[]
+  qrWhatsapp QrWhatsappPosto?
   eventos   EventoCliente[] @relation("EventosDoPosto")
   campanhas Campanha[]      @relation("CampanhaPostos")
   pedidosArte PedidoArte[]
@@ -125,6 +126,7 @@ model Campanha {
   id                     String   @id @default(cuid())
   nome                   String
   tipo                   String // SORTEIO | CUPOM | OFERTA
+  corDestaque            String   @default("rosa")
   premio                 String?
   inicio                 DateTime?
   fim                    DateTime?
@@ -176,6 +178,8 @@ model Automacao {
   modelo    ModeloMensagem? @relation(fields: [modeloId], references: [id], onDelete: SetNull)
   ativo     Boolean  @default(true)
   descricao String?
+  funilQrRegistradoEm DateTime?
+  funilQr Json?
   criadoEm  DateTime @default(now())
 }
 
@@ -315,6 +319,12 @@ model Video {
   etapa    String   @default("IDEIA") // IDEIA | ROTEIRO | APROVAR | GRAVACAO | EDICAO | PUBLICADO
   postoId  String?
   posto    Posto?   @relation(fields: [postoId], references: [id], onDelete: SetNull)
+  formato  String?
+  solicitante String?
+  referenciaUrl String?
+  gravacaoEm DateTime?
+  publicarAte DateTime?
+  publicadoEm DateTime?
   roteiro  String?
   elenco   String?
   votos    Int      @default(0)
@@ -365,4 +375,11 @@ model Parceria {
   status          String   @default("PROSPECCAO") // PROSPECCAO | NEGOCIANDO | CONFIRMADO | EM_GRAVACAO | PUBLICADO | ENCERRADO
   cupom           String?
   criadoEm        DateTime @default(now())
+}
+
+model QrWhatsappPosto {
+  token  String @id @default(cuid())
+  postoId String @unique
+  posto Posto @relation(fields: [postoId], references: [id], onDelete: Cascade)
+  acessos Int @default(0)
 }

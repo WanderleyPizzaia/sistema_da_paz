@@ -8,11 +8,18 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { logout } from "@/lib/actions/auth";
 import { ROLE_LABEL, type Role } from "@/lib/enums";
 
-type Item = { href: string; label: string; roles?: Role[] };
+type Item = { href: string; label: string; cor?: string; roles?: Role[] };
 type Secao = { titulo: string; itens: Item[] };
 
 const SECOES: Secao[] = [
-  { titulo: "Objetivos de marketing", itens: [{ href: "/paz365", label: "PAZ365" }, { href: "/postos", label: "Postos / abastecimento" }] },
+  {
+    titulo: "Objetivos de marketing",
+    itens: [
+      { href: "/paz365", label: "PAZ365", cor: "#ee5f89" },
+      { href: "/postos?visao=abastecimento", label: "Rede Paz · abastecimento", cor: "#fff" },
+      { href: "/estop", label: "E-Stop", cor: "#52cc7d", roles: ["ADM", "MARKETING"] },
+    ],
+  },
   {
     titulo: "Gestão",
     itens: [
@@ -20,6 +27,7 @@ const SECOES: Secao[] = [
       { href: "/clientes", label: "Clientes", roles: ["ADM", "MARKETING"] },
       { href: "/campanhas", label: "Campanhas e sorteios", roles: ["ADM", "MARKETING"] },
       { href: "/whatsapp", label: "WhatsApp", roles: ["ADM", "MARKETING"] },
+      { href: "/postos", label: "Postos" },
     ],
   },
   {
@@ -27,7 +35,6 @@ const SECOES: Secao[] = [
     itens: [
       { href: "/designer", label: "Designer", roles: ["ADM", "MARKETING"] },
       { href: "/videos", label: "Vídeos", roles: ["ADM", "MARKETING"] },
-      { href: "/estop", label: "E-Stop", roles: ["ADM", "MARKETING"] },
       { href: "/influenciadores", label: "Influenciadores", roles: ["ADM", "MARKETING"] },
     ],
   },
@@ -172,7 +179,10 @@ export default function AppShell({
                         idx > 0 ? "border-t border-gray-100" : ""
                       }`}
                     >
-                      {i.label}
+                      <span className="flex items-center gap-2.5">
+                        {i.cor && <span aria-hidden="true" className="size-2.5 shrink-0 rounded-full border border-black/15" style={{ backgroundColor: i.cor }} />}
+                        {i.label}
+                      </span>
                       <span className="text-gray-400">{CHEVRON}</span>
                     </Link>
                   ))}

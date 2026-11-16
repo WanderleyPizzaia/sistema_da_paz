@@ -42,24 +42,29 @@ export default async function FichaClientePage({
     });
 
   return (
-    <div className="p-6 lg:p-8">
-      <div className="mb-6">
-        <Link
-          href="/clientes"
-          className="text-sm text-gray-500 hover:text-gray-700"
-        >
-          ← Clientes
-        </Link>
-        <h1 className="mt-1 text-xl font-bold text-gray-900">{cliente.nome}</h1>
-        <p className="text-sm text-gray-500">
-          {cliente.whatsapp}
-          {cliente.origem ? ` · ${cliente.origem}` : ""}
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#f4f5fa] p-5 lg:p-8">
+      <div className="max-w-[1176px]">
+      <Link href="/clientes" className="mb-4 inline-block text-sm font-semibold hover:underline">← Clientes</Link>
+      <header className="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-[20px] bg-gradient-to-br from-[#344197] to-[#1d245e] p-6 text-white shadow-[0_14px_32px_#293d8d40]">
+        <div className="flex items-center gap-4">
+          <span aria-hidden="true" className="grid size-14 shrink-0 place-items-center rounded-2xl bg-white/15 text-xl font-bold">{cliente.nome.trim().split(/\s+/).slice(0, 2).map((parte) => parte[0]).join("").toUpperCase()}</span>
+          <div>
+            <p className="text-xs tracking-widest text-blue-100">FICHA DO CLIENTE</p>
+            <h1 className="text-3xl font-semibold">{cliente.nome}</h1>
+            <p className="mt-1 text-sm text-blue-100">{[cliente.whatsapp, cliente.origem, cliente.postoPreferido?.nome].filter(Boolean).join(" · ")}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {podeEditar && <a href="#dados-cliente" className="rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-semibold !text-white">Editar</a>}
+          {cliente.consentimentos.some((item) => item.finalidade === "MARKETING_WHATSAPP" && item.aceito) && (
+            <Link href={`/clientes/disparo?q=${encodeURIComponent(cliente.whatsapp)}`} className="rounded-xl bg-[#be2530] px-4 py-2.5 text-sm font-semibold !text-white">Enviar WhatsApp</Link>
+          )}
+        </div>
+      </header>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Dados */}
-        <section className="rounded-xl border border-gray-200 bg-white p-5">
+        <section id="dados-cliente" className="rounded-xl border border-gray-200 bg-white p-5">
           <h2 className="mb-4 font-semibold text-gray-900">Dados do cliente</h2>
           {podeEditar ? (
             <EditarClienteForm
@@ -174,6 +179,7 @@ export default async function FichaClientePage({
             </div>
           )}
         </section>
+      </div>
       </div>
     </div>
   );

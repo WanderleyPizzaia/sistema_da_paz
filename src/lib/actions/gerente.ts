@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { criarPedidoNaFila } from "@/lib/pedidos-arte";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { exigir, podeOperarMarketing } from "@/lib/authz";
@@ -63,15 +64,10 @@ export async function criarPedidoGerente(
       },
     });
   } else {
-    const qtd = await prisma.pedidoArte.count();
-    await prisma.pedidoArte.create({
-      data: {
-        numero: qtd + 1,
-        postoId: u.postoId,
-        acao: titulo,
-        descricao,
-        prazo: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      },
+    await criarPedidoNaFila({
+      postoId: u.postoId,
+      acao: titulo,
+      descricao,
     });
   }
   await registrar({

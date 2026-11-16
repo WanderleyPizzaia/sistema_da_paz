@@ -10,7 +10,7 @@ export default async function NovaCampanhaPage() {
   if (!podeOperarMarketing(u)) return <SemAcesso />;
 
   const postos = await prisma.posto.findMany({
-    select: { id: true, nome: true },
+    select: { id: true, nome: true, bandeira: true },
     orderBy: { nome: "asc" },
   });
 

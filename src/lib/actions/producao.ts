@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { criarPedidoNaFila } from "@/lib/pedidos-arte";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { exigir, podeOperarMarketing } from "@/lib/authz";
@@ -30,6 +31,48 @@ function num(v: FormDataEntryValue | null): number {
 
 // ---------- Designer (pedidos de arte) ----------
 
+function dadosPedidoArte(formData: FormData) {
+  const texto = (campo: string) => String(formData.get(campo) ?? "").trim() || null;
+  return {
+    postoId: texto("postoId"),
+    formato: texto("formato"),
+    descricao: texto("descricao"),
+    textoArte: texto("textoArte"),
+    referencias: texto("referencias"),
+    responsavel: texto("responsavel"),
+    ehEStop: formData.get("ehEStop") === "on",
+  };
+}
+
+export async function editarPedidoArte(
+  id: string,
+  _prev: ProducaoState,
+  formData: FormData,
+): Promise<ProducaoState> {
+  const u = await exigirMkt();
+  const acao = String(formData.get("acao") ?? "").trim();
+  if (acao.length < 2) return { erro: "Descreva a ação de marketing." };
+  const dados = dadosPedidoArte(formData);
+  if (dados.postoId && !await prisma.posto.findUnique({ where: { id: dados.postoId }, select: { id: true } })) {
+    return { erro: "Selecione um posto válido." };
+  }
+  const pedido = await prisma.pedidoArte.updateMany({
+    where: { id },
+    data: { acao, ...dados },
+  });
+  if (!pedido.count) return { erro: "Pedido não encontrado." };
+  await registrar({
+    userId: u.id,
+    acao: "pedido.editar",
+    entidade: "PedidoArte",
+    entidadeId: id,
+    detalhe: acao,
+  });
+  revalidatePath("/designer");
+  revalidatePath("/visao-geral");
+  return { ok: true };
+}
+
 export async function criarPedidoArte(
   _prev: ProducaoState,
   formData: FormData,
@@ -39,24 +82,7 @@ export async function criarPedidoArte(
   const acao = String(formData.get("acao") ?? "").trim();
   if (acao.length < 2) return { erro: "Descreva a ação de marketing." };
 
-  const postoId = String(formData.get("postoId") ?? "").trim() || null;
-  const qtd = await prisma.pedidoArte.count();
-  const prazo = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-  const pedido = await prisma.pedidoArte.create({
-    data: {
-      numero: qtd + 1,
-      postoId,
-      acao,
-      formato: String(formData.get("formato") ?? "").trim() || null,
-      descricao: String(formData.get("descricao") ?? "").trim() || null,
-      textoArte: String(formData.get("textoArte") ?? "").trim() || null,
-      referencias: String(formData.get("referencias") ?? "").trim() || null,
-      responsavel: String(formData.get("responsavel") ?? "").trim() || null,
-      ehEStop: formData.get("ehEStop") === "on",
-      prazo,
-    },
-  });
+  const pedido = await criarPedidoNaFila({ acao, ...dadosPedidoArte(formData) });
   await registrar({
     userId: u.id,
     acao: "pedido.criar",
@@ -126,6 +152,14 @@ export async function criarVideo(
   const origem = String(formData.get("origem") ?? "IDEIA");
   const postoId = String(formData.get("postoId") ?? "").trim() || null;
 
+  const gravacao = String(formData.get("gravacaoEm") ?? "");
+  const publicacao = String(formData.get("publicarAte") ?? "");
+  const gravacaoEm = gravacao ? new Date(gravacao + "-03:00") : null;
+  const publicarAte = publicacao ? new Date(publicacao + "T12:00:00-03:00") : null;
+  if ((gravacaoEm && !Number.isFinite(+gravacaoEm)) || (publicarAte && !Number.isFinite(+publicarAte))) {
+    return { erro: "Confira as datas da gravação e da publicação." };
+  }
+
   const video = await prisma.video.create({
     data: {
       titulo,
@@ -133,6 +167,11 @@ export async function criarVideo(
         ? origem
         : "IDEIA",
       postoId,
+      gravacaoEm,
+      publicarAte,
+      formato: String(formData.get("formato") ?? "").trim() || null,
+      solicitante: String(formData.get("solicitante") ?? "").trim() || null,
+      referenciaUrl: String(formData.get("referenciaUrl") ?? "").trim() || null,
       roteiro: String(formData.get("roteiro") ?? "").trim() || null,
       elenco: String(formData.get("elenco") ?? "").trim() || null,
     },
@@ -157,8 +196,14 @@ export async function moverVideo(formData: FormData): Promise<void> {
 
   const i = ETAPAS_VIDEO.indexOf(video.etapa as (typeof ETAPAS_VIDEO)[number]);
   const j = dir === "prev" ? i - 1 : i + 1;
-  const nova = ETAPAS_VIDEO[Math.max(0, Math.min(j, ETAPAS_VIDEO.length - 1))];
-  await prisma.video.update({ where: { id }, data: { etapa: nova } });
+  const destino = String(formData.get("etapa") ?? "");
+  const nova = ETAPAS_VIDEO.find((etapa) => etapa === destino) ??
+    ETAPAS_VIDEO[Math.max(0, Math.min(j, ETAPAS_VIDEO.length - 1))];
+  if (nova === video.etapa) return;
+  await prisma.video.update({
+    where: { id },
+    data: { etapa: nova, publicadoEm: nova === "PUBLICADO" ? new Date() : null },
+  });
   await registrar({
     userId: u.id,
     acao: "video.mover",

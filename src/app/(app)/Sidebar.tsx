@@ -8,15 +8,16 @@ import ThemeToggle from "@/components/ThemeToggle";
 
 type Props = { nome: string; role: string; onNavigate?: () => void };
 
-type Item = { href: string; label: string; roles?: Role[] };
+type Item = { href: string; label: string; cor?: string; roles?: Role[] };
 type Secao = { titulo: string; itens: Item[] };
 
 const SECOES: Secao[] = [
   {
     titulo: "Objetivos de marketing",
     itens: [
-      { href: "/paz365", label: "PAZ365" },
-      { href: "/postos", label: "Postos / abastecimento" },
+      { href: "/paz365", label: "PAZ365", cor: "#ee5f89" },
+      { href: "/postos?visao=abastecimento", label: "Rede Paz · abastecimento", cor: "#fff" },
+      { href: "/estop", label: "E-Stop", cor: "#52cc7d", roles: ["ADM", "MARKETING"] },
     ],
   },
   {
@@ -26,6 +27,7 @@ const SECOES: Secao[] = [
       { href: "/clientes", label: "Clientes", roles: ["ADM", "MARKETING"] },
       { href: "/campanhas", label: "Campanhas e sorteios", roles: ["ADM", "MARKETING"] },
       { href: "/whatsapp", label: "WhatsApp", roles: ["ADM", "MARKETING"] },
+      { href: "/postos", label: "Postos" },
     ],
   },
   {
@@ -33,7 +35,6 @@ const SECOES: Secao[] = [
     itens: [
       { href: "/designer", label: "Designer", roles: ["ADM", "MARKETING"] },
       { href: "/videos", label: "Vídeos", roles: ["ADM", "MARKETING"] },
-      { href: "/estop", label: "E-Stop", roles: ["ADM", "MARKETING"] },
       { href: "/influenciadores", label: "Influenciadores", roles: ["ADM", "MARKETING"] },
     ],
   },
@@ -48,9 +49,12 @@ const SECOES: Secao[] = [
 
 export default function Sidebar({ nome, role, onNavigate }: Props) {
   const pathname = usePathname();
+  const ehEStop = pathname === "/estop" || pathname.startsWith("/estop/");
+  const fundo = ehEStop ? "bg-[#14532d]" : "bg-[var(--paz-navy)]";
+  const fundoAtivo = ehEStop ? "bg-[#237a48]" : "bg-[var(--paz-red)]";
 
   return (
-    <aside className="flex h-full min-h-screen w-60 shrink-0 flex-col bg-[var(--paz-navy)] text-white">
+    <aside className={`flex h-full min-h-screen w-60 shrink-0 flex-col text-white ${fundo}`}>
       <div className="px-5 py-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo-paz.png" alt="PAZ" className="h-7 w-auto" />
@@ -74,13 +78,15 @@ export default function Sidebar({ nome, role, onNavigate }: Props) {
                   <Link
                     key={i.href}
                     href={i.href}
+                    aria-current={ativo ? "page" : undefined}
                     onClick={onNavigate}
-                    className={`mb-0.5 block rounded-md px-2.5 py-2 text-sm transition ${
+                    className={`mb-0.5 flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition ${
                       ativo
-                        ? "bg-[var(--paz-red)] font-semibold text-white"
+                        ? `${fundoAtivo} font-semibold text-white`
                         : "text-white/75 hover:bg-white/10"
                     }`}
                   >
+                    {i.cor && <span aria-hidden="true" className="size-2.5 shrink-0 rounded-full border border-black/15" style={{ backgroundColor: i.cor }} />}
                     {i.label}
                   </Link>
                 );

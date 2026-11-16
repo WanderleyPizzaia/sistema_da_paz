@@ -108,10 +108,11 @@ export const EVENTO_LABEL: Record<string, string> = {
 
 // ----- Fase 3: campanhas, modelos e automações -----
 
-export const TIPOS_CAMPANHA = ["SORTEIO", "CUPOM", "OFERTA"] as const;
+export const TIPOS_CAMPANHA = ["SORTEIO", "CUPOM", "OFERTA", "CAMPANHA_MES"] as const;
 export type TipoCampanha = (typeof TIPOS_CAMPANHA)[number];
 
 export const TIPO_CAMPANHA_LABEL: Record<string, string> = {
+  CAMPANHA_MES: "Campanha do mês",
   SORTEIO: "Sorteio",
   CUPOM: "Cupom",
   OFERTA: "Oferta PAZ365",

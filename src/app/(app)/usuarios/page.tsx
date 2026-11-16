@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireUser } from "@/lib/session";
 import { isAdm } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
@@ -11,7 +12,7 @@ import {
 import SemAcesso from "@/components/SemAcesso";
 import NovoUsuarioForm from "./NovoUsuarioForm";
 
-export default async function UsuariosPage() {
+export default async function UsuariosPage({ searchParams }: { searchParams: Promise<{ perfil?: string }> }) {
   const u = await requireUser();
   if (!isAdm(u)) return <SemAcesso />;
 
@@ -30,31 +31,50 @@ export default async function UsuariosPage() {
     ROLES.map((r) => [r, usuarios.filter((x) => x.role === r && x.ativo).length]),
   ) as Record<Role, number>;
 
+  const { perfil } = await searchParams;
+  const filtro = ROLES.find((role) => role === perfil);
+  const pessoas = filtro ? usuarios.filter((usuario) => usuario.role === filtro) : usuarios;
+  const descricoes = {
+    ADM: "Gerencia os cadastros, a operação e os acessos.",
+    MARKETING: "Acompanha produção, campanhas e ações nos postos.",
+    GERENTE: "Usa o App do Gerente para cuidar das ações e dos pedidos do próprio posto.",
+  };
+
   return (
-    <div className="p-6 lg:p-8">
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">Usuários e acessos</h1>
-        <p className="text-sm text-gray-500">
-          Cada perfil enxerga só o que precisa. A permissão é checada no
-          servidor.
-        </p>
-      </div>
-
-      <div className="mb-6 grid grid-cols-3 gap-3">
-        {ROLES.map((r) => (
-          <div
-            key={r}
-            className="rounded-xl border border-gray-200 bg-white px-4 py-3"
-          >
-            <p className="text-xs text-gray-500">{ROLE_LABEL[r]}</p>
-            <p className="text-2xl font-bold text-gray-900">{contagem[r]}</p>
-          </div>
-        ))}
-      </div>
-
+    <div className="min-h-screen bg-[#f4f5fa] p-5 lg:p-8">
+      <div className="max-w-[1176px]">
+      <section className="mb-5 rounded-[20px] bg-gradient-to-br from-[#344197] to-[#1d245e] p-6 text-white shadow-[0_14px_32px_#293d8d40]">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div><p className="text-xs tracking-widest text-blue-100">ADMINISTRAÇÃO</p><h1 className="mt-1 text-4xl font-semibold">Usuários e acessos</h1></div>
+          <a href="#convidar" className="rounded-xl bg-[#be2530] px-4 py-3 text-sm font-semibold !text-white">+ Cadastrar pessoa</a>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          {ROLES.map((role) => <Link key={role} href={`/usuarios?perfil=${role}#pessoas`} className="rounded-xl border border-white/25 bg-white/10 p-4 !text-white">
+            <p className="font-semibold">{ROLE_LABEL[role]} · {contagem[role]}</p><p className="mt-1 text-xs text-blue-100">{descricoes[role]}</p>
+          </Link>)}
+        </div>
+      </section>
+      <section className="mb-5 overflow-x-auto rounded-2xl border border-gray-200 bg-white p-5">
+        <h2 className="mb-3 text-sm font-bold uppercase">O que cada perfil vê</h2>
+        <table className="w-full min-w-[520px] text-left text-sm">
+          <thead><tr>{["Área do CRM", "ADM", "Marketing", "Gerente"].map((item) => <th key={item} scope="col" className="border-b p-2">{item}</th>)}</tr></thead>
+          <tbody>{[
+            ["Produção, campanhas e WhatsApp", "Acesso", "Acesso", "—"],
+            ["Postos e clientes", "Cadastro e edição", "Consulta e operação", "Próprio posto no app"],
+            ["Usuários e acessos", "Cadastro e gestão", "—", "—"],
+            ["Ações locais e pedidos no app", "Acompanha a rede", "Acompanha a rede", "Próprio posto"],
+          ].map(([area, adm, marketing, gerente]) => <tr key={area} className="border-b border-gray-100"><th scope="row" className="p-2 font-medium">{area}</th><td className="p-2">{adm}</td><td className="p-2">{marketing}</td><td className="p-2">{gerente}</td></tr>)}</tbody>
+        </table>
+      </section>
+      <nav id="pessoas" aria-label="Filtrar pessoas" className="mb-4 flex flex-wrap items-center gap-2">
+        <strong className="mr-2 text-sm">Pessoas cadastradas</strong>
+        <Link href="/usuarios#pessoas" className="rounded-full border bg-white px-3 py-2 text-xs">Todos</Link>
+        {ROLES.map((role) => <Link key={role} href={`/usuarios?perfil=${role}#pessoas`} aria-current={filtro === role ? "true" : undefined} className={`rounded-full border px-3 py-2 text-xs ${filtro === role ? "bg-[#304299] !text-white" : "bg-white"}`}>{ROLE_LABEL[role]}</Link>)}
+      </nav>
+      {!pessoas.length && <p className="mb-4 text-sm text-gray-600">Nenhuma pessoa neste perfil.</p>}
       {/* Mobile: cards */}
       <ul className="mb-6 space-y-2 lg:hidden">
-        {usuarios.map((x) => (
+        {pessoas.map((x) => (
           <li
             key={x.id}
             className={`rounded-xl border border-gray-200 bg-white p-4 ${
@@ -114,7 +134,7 @@ export default async function UsuariosPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {usuarios.map((x) => (
+            {pessoas.map((x) => (
               <tr key={x.id} className={x.ativo ? "" : "bg-gray-50 opacity-70"}>
                 <td className="px-4 py-3 font-medium text-gray-900">
                   {x.nome}
@@ -160,7 +180,11 @@ export default async function UsuariosPage() {
         </table>
       </div>
 
-      <NovoUsuarioForm postos={postos} />
+      <section id="convidar" className="mt-5 rounded-2xl border border-gray-200 bg-white p-5">
+        <h2 className="mb-3 text-lg font-bold">Cadastrar pessoa</h2>
+        <NovoUsuarioForm postos={postos} />
+      </section>
+      </div>
     </div>
   );
 }

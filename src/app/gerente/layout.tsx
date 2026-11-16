@@ -12,7 +12,7 @@ export default async function GerenteLayout({
   children: React.ReactNode;
 }) {
   const u = await getSession();
-  if (!u) redirect("/login");
+  if (!u) redirect("/login?gerente=1");
   // Área exclusiva do gerente.
   if (u.role !== "GERENTE") redirect("/postos");
 

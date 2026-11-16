@@ -1,14 +1,15 @@
 "use client";
 
 import { useActionState } from "react";
+import PostosParticipantes, { type PostoParticipante } from "../PostosParticipantes";
+import PaletaCampanha from "@/components/PaletaCampanha";
 import Link from "next/link";
 import { criarCampanha, type CampanhaState } from "@/lib/actions/campanhas";
 import { TIPOS_CAMPANHA, TIPO_CAMPANHA_LABEL } from "@/lib/enums";
 
-type PostoOpt = { id: string; nome: string };
 const inicial: CampanhaState = {};
 
-export default function NovaCampanhaForm({ postos }: { postos: PostoOpt[] }) {
+export default function NovaCampanhaForm({ postos }: { postos: PostoParticipante[] }) {
   const [state, action, pending] = useActionState(criarCampanha, inicial);
 
   return (
@@ -44,20 +45,9 @@ export default function NovaCampanhaForm({ postos }: { postos: PostoOpt[] }) {
         </div>
       </div>
 
-      <div>
-        <label className="lbl">Postos participantes</label>
-        <div className="grid max-h-48 grid-cols-2 gap-2 overflow-y-auto rounded-lg border border-gray-200 p-3">
-          {postos.length === 0 && (
-            <p className="text-sm text-gray-400">Nenhum posto cadastrado.</p>
-          )}
-          {postos.map((p) => (
-            <label key={p.id} className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="postos" value={p.id} />
-              {p.nome}
-            </label>
-          ))}
-        </div>
-      </div>
+      <PaletaCampanha />
+
+      <PostosParticipantes postos={postos} />
 
       {state.erro && <p className="text-sm text-[var(--paz-red)]">{state.erro}</p>}
 

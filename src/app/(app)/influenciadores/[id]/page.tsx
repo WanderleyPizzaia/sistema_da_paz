@@ -116,7 +116,7 @@ export default async function InfluenciadorPage({
           )}
         </section>
 
-        <section className="rounded-xl border border-gray-200 bg-white p-5">
+        <section id="nova-parceria" className="rounded-xl border border-gray-200 bg-white p-5">
           <h2 className="mb-4 font-semibold text-gray-900">Nova parceria</h2>
           <NovaParceriaForm influenciadorId={inf.id} postos={postos} />
         </section>
