@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { criarUsuario, type UsuarioState } from "@/lib/actions/usuarios";
 import {
   ROLES,
@@ -14,16 +14,16 @@ type PostoOpt = { id: string; nome: string };
 const inicial: UsuarioState = {};
 
 export default function NovoUsuarioForm({ postos }: { postos: PostoOpt[] }) {
-  const [state, action, pending] = useActionState(criarUsuario, inicial);
   const [role, setRole] = useState<Role>("MARKETING");
   const formRef = useRef<HTMLFormElement>(null);
-
-  useEffect(() => {
-    if (state.ok) {
+  const [state, action, pending] = useActionState(async (previousState: UsuarioState, formData: FormData) => {
+    const result = await criarUsuario(previousState, formData);
+    if (result.ok) {
       formRef.current?.reset();
       setRole("MARKETING");
     }
-  }, [state.ok]);
+    return result;
+  }, inicial);
 
   return (
     <form
